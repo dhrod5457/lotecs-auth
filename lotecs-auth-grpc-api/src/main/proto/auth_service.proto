@@ -6,6 +6,8 @@ option java_multiple_files = true;
 option java_package = "com.lotecs.auth.grpc";
 option java_outer_classname = "AuthServiceProto";
 
+import "google/protobuf/struct.proto";
+
 service AuthService {
   rpc Login(LoginRequest) returns (LoginResponse);
   rpc Logout(LogoutRequest) returns (LogoutResponse);
@@ -36,6 +38,7 @@ message LoginResponse {
   int32 expires_in = 3;
   UserInfo user = 4;
   string sso_type = 5;
+  google.protobuf.Struct additional_data = 6;
 }
 
 message LogoutRequest {

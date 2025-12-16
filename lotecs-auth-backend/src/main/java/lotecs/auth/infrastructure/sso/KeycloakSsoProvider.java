@@ -86,7 +86,7 @@ public class KeycloakSsoProvider implements SsoProvider {
 
             log.info("Successfully authenticated user {} via Keycloak for tenant {}", username, request.getTenantId());
 
-            return SsoAuthResult.success(externalUserId, username, email, fullName, roles);
+            return SsoAuthResult.success(externalUserId, username, email, fullName, roles, null);
 
         } catch (IllegalStateException e) {
             log.error("Configuration error: {}", e.getMessage());

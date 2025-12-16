@@ -15,6 +15,7 @@ java {
 }
 
 repositories {
+    mavenLocal()
     maven {
         url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
         credentials {
@@ -42,6 +43,9 @@ dependencies {
 
     // gRPC API
     implementation project(':lotecs-auth-grpc-api')
+
+    // Relay gRPC SDK
+    implementation 'lotecs.relay:relay-grpc-api:1.0.0-SNAPSHOT'
 
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -81,6 +85,7 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'io.grpc:grpc-testing:1.59.0'
 
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'

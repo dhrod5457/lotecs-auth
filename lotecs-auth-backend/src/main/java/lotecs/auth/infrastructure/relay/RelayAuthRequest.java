@@ -14,4 +14,5 @@ public class RelayAuthRequest {
     private String tenantId;
     private String username;
     private String password;
+    private String ipAddress;
 }

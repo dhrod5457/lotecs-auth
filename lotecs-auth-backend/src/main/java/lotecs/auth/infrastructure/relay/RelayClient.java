@@ -5,9 +5,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import com.lotecs.auth.grpc.AuthServiceGrpc;
-import com.lotecs.auth.grpc.LoginRequest;
-import com.lotecs.auth.grpc.LoginResponse;
+import lotecs.auth.infrastructure.grpc.StructConverter;
+import lotecs.relay.auth.grpc.v1.AuthenticateRequest;
+import lotecs.relay.auth.grpc.v1.AuthenticateResponse;
+import lotecs.relay.auth.grpc.v1.RelayAuthServiceGrpc;
+import lotecs.relay.auth.grpc.v1.RelayUserInfo;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,31 +28,42 @@ public class RelayClient {
             request.getUsername(), request.getTenantId(), relayEndpoint);
 
         ManagedChannel channel = getOrCreateChannel(relayEndpoint);
-        AuthServiceGrpc.AuthServiceBlockingStub stub = AuthServiceGrpc.newBlockingStub(channel)
+        RelayAuthServiceGrpc.RelayAuthServiceBlockingStub stub = RelayAuthServiceGrpc.newBlockingStub(channel)
             .withDeadlineAfter(5, TimeUnit.SECONDS);
 
         try {
-            LoginRequest loginRequest = LoginRequest.newBuilder()
-                .setUsername(request.getUsername())
-                .setPassword(request.getPassword())
+            AuthenticateRequest authenticateRequest = AuthenticateRequest.newBuilder()
                 .setTenantId(request.getTenantId())
+                .setUserId(request.getUsername())
+                .setPassword(request.getPassword())
+                .setIpAddress(request.getIpAddress() != null ? request.getIpAddress() : "")
                 .build();
 
-            LoginResponse response = stub.login(loginRequest);
+            AuthenticateResponse response = stub.authenticate(authenticateRequest);
 
-            if (response.hasUser()) {
+            if (response.getSuccess()) {
+                RelayUserInfo userInfo = response.getUserInfo();
                 log.debug("Authentication successful for user '{}'", request.getUsername());
+
+                Map<String, Object> additionalData = userInfo.hasAdditionalData()
+                    ? StructConverter.toMap(userInfo.getAdditionalData())
+                    : null;
+
                 return RelayAuthResponse.success(
-                    response.getUser().getUserId(),
-                    request.getUsername(),
-                    response.getUser().getFullName(),
-                    List.copyOf(response.getUser().getRolesList())
+                    userInfo.getUserId(),
+                    userInfo.getUserName(),
+                    userInfo.getUserName(),
+                    userInfo.getUserType(),
+                    userInfo.getDepartment(),
+                    List.copyOf(userInfo.getRolesList()),
+                    additionalData
                 );
             } else {
-                log.warn("Authentication failed for user '{}'", request.getUsername());
+                log.warn("Authentication failed for user '{}': {} - {}",
+                    request.getUsername(), response.getErrorCode(), response.getErrorMessage());
                 return RelayAuthResponse.failure(
-                    "AUTH_FAILED",
-                    "Authentication failed"
+                    response.getErrorCode(),
+                    response.getErrorMessage()
                 );
             }
         } catch (StatusRuntimeException e) {

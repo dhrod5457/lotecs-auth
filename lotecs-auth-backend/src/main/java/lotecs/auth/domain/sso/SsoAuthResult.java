@@ -1,6 +1,7 @@
 package lotecs.auth.domain.sso;
 
 import java.util.List;
+import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,7 @@ public class SsoAuthResult {
     private String email;
     private String fullName;
     private List<String> roles;
+    private Map<String, Object> additionalData;
     private String errorCode;
     private String errorMessage;
 
@@ -27,7 +29,8 @@ public class SsoAuthResult {
             String username,
             String email,
             String fullName,
-            List<String> roles
+            List<String> roles,
+            Map<String, Object> additionalData
     ) {
         return SsoAuthResult.builder()
                 .success(true)
@@ -36,6 +39,7 @@ public class SsoAuthResult {
                 .email(email)
                 .fullName(fullName)
                 .roles(roles)
+                .additionalData(additionalData)
                 .build();
     }
 

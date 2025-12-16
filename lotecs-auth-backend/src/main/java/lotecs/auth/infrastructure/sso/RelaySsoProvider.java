@@ -37,6 +37,7 @@ public class RelaySsoProvider implements SsoProvider {
                     .tenantId(request.getTenantId())
                     .username(request.getUsername())
                     .password(request.getPassword())
+                    .ipAddress(request.getIpAddress())
                     .build();
 
             RelayAuthResponse relayResponse = relayClient.authenticate(config.getRelayEndpoint(), relayRequest);
@@ -48,7 +49,8 @@ public class RelaySsoProvider implements SsoProvider {
                         relayResponse.getUsername(),
                         relayResponse.getEmail(),
                         relayResponse.getFullName(),
-                        relayResponse.getRoles()
+                        relayResponse.getRoles(),
+                        relayResponse.getAdditionalData()
                 );
             } else {
                 log.warn("Relay authentication failed for user {}: {} - {}",

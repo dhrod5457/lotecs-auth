@@ -1,5 +1,7 @@
 package lotecs.auth.application.auth.dto;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,4 +20,5 @@ public class LoginResponse {
     private Long expiresIn;
     private UserDto user;
     private SsoType ssoType;
+    private Map<String, Object> additionalData;
 }

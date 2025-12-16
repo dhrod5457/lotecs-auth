@@ -132,7 +132,7 @@ public class LdapSsoProvider implements SsoProvider {
             // Use username as external user ID (LDAP DN could be used instead)
             String externalUserId = userDn;
 
-            return SsoAuthResult.success(externalUserId, request.getUsername(), email, fullName, roles);
+            return SsoAuthResult.success(externalUserId, request.getUsername(), email, fullName, roles, null);
 
         } catch (IllegalStateException e) {
             log.error("Configuration error: {}", e.getMessage());

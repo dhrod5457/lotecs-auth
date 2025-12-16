@@ -45,6 +45,19 @@ public class AuthService {
     private final UserDtoMapper userDtoMapper;
 
     /**
+     * 인증 결과 홀더 (User + additionalData)
+     */
+    private record AuthResult(User user, Map<String, Object> additionalData) {
+        static AuthResult of(User user) {
+            return new AuthResult(user, null);
+        }
+
+        static AuthResult of(User user, Map<String, Object> additionalData) {
+            return new AuthResult(user, additionalData);
+        }
+    }
+
+    /**
      * 로그인 처리
      *
      * @param request 로그인 요청
@@ -63,25 +76,27 @@ public class AuthService {
         log.info("[AUTH] SSO 설정: tenant={}, ssoType={}, ssoEnabled={}",
                 request.getTenantId(), ssoConfig.getSsoType(), ssoConfig.getSsoEnabled());
 
-        User user;
+        AuthResult authResult;
 
         // 2. SSO Type에 따라 인증 분기
         switch (ssoConfig.getSsoType()) {
             case INTERNAL:
-                user = authenticateInternal(request);
+                authResult = authenticateInternal(request);
                 break;
 
             case RELAY:
             case KEYCLOAK:
             case LDAP:
             case EXTERNAL:
-                user = authenticateExternal(request, ssoConfig);
+                authResult = authenticateExternal(request, ssoConfig);
                 break;
 
             default:
                 log.error("[AUTH] 지원하지 않는 SSO 타입: {}", ssoConfig.getSsoType());
                 throw new UnsupportedOperationException("Unsupported SSO type: " + ssoConfig.getSsoType());
         }
+
+        User user = authResult.user();
 
         // 3. 로그인 정보 업데이트
         user.recordLoginSuccess(request.getIpAddress());
@@ -109,6 +124,7 @@ public class AuthService {
                 .expiresIn(tokenResponse.getExpiresIn())
                 .user(userDtoMapper.toDto(user))
                 .ssoType(ssoConfig.getSsoType())
+                .additionalData(authResult.additionalData())
                 .build();
     }
 
@@ -130,9 +146,9 @@ public class AuthService {
      * INTERNAL 인증: DB 기반 인증
      *
      * @param request 로그인 요청
-     * @return 인증된 사용자
+     * @return 인증 결과 (User + additionalData)
      */
-    private User authenticateInternal(LoginRequest request) {
+    private AuthResult authenticateInternal(LoginRequest request) {
         log.debug("[AUTH] INTERNAL 인증 시작: username={}, tenant={}",
                 request.getUsername(), request.getTenantId());
 
@@ -157,7 +173,7 @@ public class AuthService {
         validateUserStatus(user);
 
         log.info("[AUTH] INTERNAL 인증 성공: userId={}, username={}", user.getUserId(), user.getUsername());
-        return user;
+        return AuthResult.of(user);
     }
 
     /**
@@ -165,9 +181,9 @@ public class AuthService {
      *
      * @param request 로그인 요청
      * @param ssoConfig SSO 설정
-     * @return 인증된 사용자
+     * @return 인증 결과 (User + additionalData)
      */
-    private User authenticateExternal(LoginRequest request, TenantSsoConfig ssoConfig) {
+    private AuthResult authenticateExternal(LoginRequest request, TenantSsoConfig ssoConfig) {
         log.debug("[AUTH] 외부 SSO 인증 시작: ssoType={}, tenant={}",
                 ssoConfig.getSsoType(), request.getTenantId());
 
@@ -202,7 +218,7 @@ public class AuthService {
         log.info("[AUTH] 외부 SSO 인증 및 동기화 완료: userId={}, externalUserId={}",
                 user.getUserId(), ssoResult.getExternalUserId());
 
-        return user;
+        return AuthResult.of(user, ssoResult.getAdditionalData());
     }
 
     /**

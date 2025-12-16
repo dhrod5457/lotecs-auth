@@ -1,5 +1,6 @@
 package lotecs.auth.presentation.grpc.service.auth;
 
+import com.google.protobuf.Struct;
 import com.lotecs.auth.grpc.*;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import lotecs.auth.application.user.dto.CreateUserRequest;
 import lotecs.auth.application.user.dto.UpdateUserRequest;
 import lotecs.auth.application.user.dto.UserDto;
 import lotecs.auth.application.user.service.UserService;
+import lotecs.auth.infrastructure.grpc.StructConverter;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.List;
@@ -44,15 +46,22 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
             LoginResponse loginResponse = authService.login(loginRequest);
 
             // gRPC 응답 생성
-            com.lotecs.auth.grpc.LoginResponse grpcResponse = com.lotecs.auth.grpc.LoginResponse.newBuilder()
+            com.lotecs.auth.grpc.LoginResponse.Builder grpcResponseBuilder = com.lotecs.auth.grpc.LoginResponse.newBuilder()
                     .setAccessToken(loginResponse.getAccessToken())
                     .setRefreshToken(loginResponse.getRefreshToken())
                     .setExpiresIn(loginResponse.getExpiresIn().intValue())
                     .setUser(toUserInfo(loginResponse.getUser()))
-                    .setSsoType(loginResponse.getSsoType() != null ? loginResponse.getSsoType().name() : "INTERNAL")
-                    .build();
+                    .setSsoType(loginResponse.getSsoType() != null ? loginResponse.getSsoType().name() : "INTERNAL");
 
-            responseObserver.onNext(grpcResponse);
+            // additionalData 추가
+            if (loginResponse.getAdditionalData() != null) {
+                Struct additionalDataStruct = StructConverter.toStruct(loginResponse.getAdditionalData());
+                if (additionalDataStruct != null) {
+                    grpcResponseBuilder.setAdditionalData(additionalDataStruct);
+                }
+            }
+
+            responseObserver.onNext(grpcResponseBuilder.build());
             responseObserver.onCompleted();
 
         } catch (Exception e) {
