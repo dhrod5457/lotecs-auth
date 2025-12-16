@@ -24,61 +24,61 @@
         <result property="createdAt" column="CREATED_AT"/>
         <result property="updatedBy" column="UPDATED_BY"/>
         <result property="updatedAt" column="UPDATED_AT"/>
+        <result property="deletedAt" column="DELETED_AT"/>
     </resultMap>
+
+    <!-- 공통 컬럼 -->
+    <sql id="userColumns">
+        USER_ID,
+        TENANT_ID,
+        USERNAME,
+        PASSWORD,
+        EMAIL,
+        PHONE_NUMBER,
+        FULL_NAME,
+        STATUS,
+        ACCOUNT_NON_LOCKED,
+        CREDENTIALS_NON_EXPIRED,
+        ENABLED,
+        LAST_LOGIN_AT,
+        LAST_LOGIN_IP,
+        FAILED_LOGIN_ATTEMPTS,
+        LOCKED_AT,
+        PASSWORD_CHANGED_AT,
+        CREATED_BY,
+        CREATED_AT,
+        UPDATED_BY,
+        UPDATED_AT,
+        DELETED_AT
+    </sql>
 
     <!-- ID로 사용자 조회 -->
     <select id="findById" resultMap="userResultMap">
         SELECT
-            USER_ID,
-            TENANT_ID,
-            USERNAME,
-            PASSWORD,
-            EMAIL,
-            PHONE_NUMBER,
-            FULL_NAME,
-            STATUS,
-            ACCOUNT_NON_LOCKED,
-            CREDENTIALS_NON_EXPIRED,
-            ENABLED,
-            LAST_LOGIN_AT,
-            LAST_LOGIN_IP,
-            FAILED_LOGIN_ATTEMPTS,
-            LOCKED_AT,
-            PASSWORD_CHANGED_AT,
-            CREATED_BY,
-            CREATED_AT,
-            UPDATED_BY,
-            UPDATED_AT
-        FROM AUTH_USERS
+            <include refid="userColumns"/>
+        FROM ATH_USERS
         WHERE USER_ID = #{userId}
+          AND DELETED_AT IS NULL
     </select>
 
     <!-- 사용자명과 테넌트 ID로 사용자 조회 -->
     <select id="findByUsernameAndTenantId" resultMap="userResultMap">
         SELECT
-            USER_ID,
-            TENANT_ID,
-            USERNAME,
-            PASSWORD,
-            EMAIL,
-            PHONE_NUMBER,
-            FULL_NAME,
-            STATUS,
-            ACCOUNT_NON_LOCKED,
-            CREDENTIALS_NON_EXPIRED,
-            ENABLED,
-            LAST_LOGIN_AT,
-            LAST_LOGIN_IP,
-            FAILED_LOGIN_ATTEMPTS,
-            LOCKED_AT,
-            PASSWORD_CHANGED_AT,
-            CREATED_BY,
-            CREATED_AT,
-            UPDATED_BY,
-            UPDATED_AT
-        FROM AUTH_USERS
+            <include refid="userColumns"/>
+        FROM ATH_USERS
         WHERE USERNAME = #{username}
           AND TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <!-- 이메일과 테넌트 ID로 사용자 조회 -->
+    <select id="findByEmailAndTenantId" resultMap="userResultMap">
+        SELECT
+            <include refid="userColumns"/>
+        FROM ATH_USERS
+        WHERE EMAIL = #{email}
+          AND TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
     </select>
 
     <!-- 테넌트 ID로 사용자 목록 조회 (페이징) -->
@@ -89,28 +89,10 @@
                 ROWNUM RNUM
             FROM (
                 SELECT
-                    USER_ID,
-                    TENANT_ID,
-                    USERNAME,
-                    PASSWORD,
-                    EMAIL,
-                    PHONE_NUMBER,
-                    FULL_NAME,
-                    STATUS,
-                    ACCOUNT_NON_LOCKED,
-                    CREDENTIALS_NON_EXPIRED,
-                    ENABLED,
-                    LAST_LOGIN_AT,
-                    LAST_LOGIN_IP,
-                    FAILED_LOGIN_ATTEMPTS,
-                    LOCKED_AT,
-                    PASSWORD_CHANGED_AT,
-                    CREATED_BY,
-                    CREATED_AT,
-                    UPDATED_BY,
-                    UPDATED_AT
-                FROM AUTH_USERS
+                    <include refid="userColumns"/>
+                FROM ATH_USERS
                 WHERE TENANT_ID = #{tenantId}
+                  AND DELETED_AT IS NULL
                 ORDER BY CREATED_AT DESC
             ) A
             WHERE ROWNUM &lt;= #{offset} + #{limit}
@@ -121,16 +103,14 @@
     <!-- 테넌트 ID로 사용자 수 조회 -->
     <select id="countByTenantId" resultType="int">
         SELECT COUNT(*)
-        FROM AUTH_USERS
+        FROM ATH_USERS
         WHERE TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
     </select>
 
     <!-- 사용자 등록 -->
     <insert id="insert" parameterType="lotecs.auth.domain.user.model.User">
-        <selectKey keyProperty="userId" resultType="long" order="BEFORE">
-            SELECT AUTH_USERS_SEQ.NEXTVAL FROM DUAL
-        </selectKey>
-        INSERT INTO AUTH_USERS (
+        INSERT INTO ATH_USERS (
             USER_ID,
             TENANT_ID,
             USERNAME,
@@ -177,7 +157,7 @@
 
     <!-- 사용자 정보 수정 -->
     <update id="update" parameterType="lotecs.auth.domain.user.model.User">
-        UPDATE AUTH_USERS
+        UPDATE ATH_USERS
         SET
             PASSWORD = #{password},
             EMAIL = #{email},
@@ -195,11 +175,21 @@
             UPDATED_BY = #{updatedBy},
             UPDATED_AT = #{updatedAt}
         WHERE USER_ID = #{userId}
+          AND DELETED_AT IS NULL
     </update>
 
-    <!-- 사용자 삭제 -->
-    <delete id="delete">
-        DELETE FROM AUTH_USERS
+    <!-- 사용자 삭제 (Soft Delete) -->
+    <update id="delete">
+        UPDATE ATH_USERS
+        SET DELETED_AT = CURRENT_TIMESTAMP,
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE USER_ID = #{userId}
+          AND DELETED_AT IS NULL
+    </update>
+
+    <!-- 사용자 삭제 (Hard Delete) - 테스트/관리용 -->
+    <delete id="hardDelete">
+        DELETE FROM ATH_USERS
         WHERE USER_ID = #{userId}
     </delete>
 

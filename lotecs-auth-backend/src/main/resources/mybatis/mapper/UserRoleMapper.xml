@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.user.mapper.UserRoleMapper">
+
+    <!-- UserRole ResultMap -->
+    <resultMap id="userRoleResultMap" type="lotecs.auth.domain.user.model.UserRole">
+        <id property="userId" column="USER_ID"/>
+        <id property="roleId" column="ROLE_ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="statusCode" column="STATUS_CODE"/>
+        <result property="statusChangedAt" column="STATUS_CHANGED_AT"/>
+        <result property="statusChangedBy" column="STATUS_CHANGED_BY"/>
+        <result property="statusReason" column="STATUS_REASON"/>
+        <result property="validFrom" column="VALID_FROM"/>
+        <result property="validUntil" column="VALID_UNTIL"/>
+        <result property="assignedAt" column="ASSIGNED_AT"/>
+        <result property="assignedBy" column="ASSIGNED_BY"/>
+        <result property="revokedAt" column="REVOKED_AT"/>
+        <result property="revokedBy" column="REVOKED_BY"/>
+    </resultMap>
+
+    <!-- 공통 컬럼 -->
+    <sql id="userRoleColumns">
+        USER_ID,
+        ROLE_ID,
+        TENANT_ID,
+        STATUS_CODE,
+        STATUS_CHANGED_AT,
+        STATUS_CHANGED_BY,
+        STATUS_REASON,
+        VALID_FROM,
+        VALID_UNTIL,
+        ASSIGNED_AT,
+        ASSIGNED_BY,
+        REVOKED_AT,
+        REVOKED_BY
+    </sql>
+
+    <!-- 사용자-역할 매핑 조회 -->
+    <select id="findByUserIdAndRoleId" resultMap="userRoleResultMap">
+        SELECT
+            <include refid="userRoleColumns"/>
+        FROM ATH_USER_ROLES
+        WHERE USER_ID = #{userId}
+          AND ROLE_ID = #{roleId}
+    </select>
+
+    <!-- 사용자 ID로 역할 매핑 목록 조회 -->
+    <select id="findByUserId" resultMap="userRoleResultMap">
+        SELECT
+            <include refid="userRoleColumns"/>
+        FROM ATH_USER_ROLES
+        WHERE USER_ID = #{userId}
+        ORDER BY ASSIGNED_AT DESC
+    </select>
+
+    <!-- 사용자 ID로 활성 역할 매핑 목록 조회 -->
+    <select id="findActiveByUserId" resultMap="userRoleResultMap">
+        SELECT
+            <include refid="userRoleColumns"/>
+        FROM ATH_USER_ROLES
+        WHERE USER_ID = #{userId}
+          AND REVOKED_AT IS NULL
+          AND (VALID_FROM IS NULL OR VALID_FROM &lt;= CURRENT_TIMESTAMP)
+          AND (VALID_UNTIL IS NULL OR VALID_UNTIL >= CURRENT_TIMESTAMP)
+        ORDER BY ASSIGNED_AT DESC
+    </select>
+
+    <!-- 역할 ID로 사용자 매핑 목록 조회 -->
+    <select id="findByRoleId" resultMap="userRoleResultMap">
+        SELECT
+            <include refid="userRoleColumns"/>
+        FROM ATH_USER_ROLES
+        WHERE ROLE_ID = #{roleId}
+          AND REVOKED_AT IS NULL
+        ORDER BY ASSIGNED_AT DESC
+    </select>
+
+    <!-- 테넌트 ID로 매핑 목록 조회 -->
+    <select id="findByTenantId" resultMap="userRoleResultMap">
+        SELECT
+            <include refid="userRoleColumns"/>
+        FROM ATH_USER_ROLES
+        WHERE TENANT_ID = #{tenantId}
+        ORDER BY ASSIGNED_AT DESC
+    </select>
+
+    <!-- 역할 할당 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.user.model.UserRole">
+        INSERT INTO ATH_USER_ROLES (
+            USER_ID,
+            ROLE_ID,
+            TENANT_ID,
+            STATUS_CODE,
+            STATUS_CHANGED_AT,
+            STATUS_CHANGED_BY,
+            STATUS_REASON,
+            VALID_FROM,
+            VALID_UNTIL,
+            ASSIGNED_AT,
+            ASSIGNED_BY
+        ) VALUES (
+            #{userId},
+            #{roleId},
+            #{tenantId},
+            #{statusCode},
+            #{statusChangedAt},
+            #{statusChangedBy},
+            #{statusReason},
+            #{validFrom},
+            #{validUntil},
+            #{assignedAt},
+            #{assignedBy}
+        )
+    </insert>
+
+    <!-- 역할 상태 업데이트 -->
+    <update id="updateStatus" parameterType="lotecs.auth.domain.user.model.UserRole">
+        UPDATE ATH_USER_ROLES
+        SET
+            STATUS_CODE = #{statusCode},
+            STATUS_CHANGED_AT = #{statusChangedAt},
+            STATUS_CHANGED_BY = #{statusChangedBy},
+            STATUS_REASON = #{statusReason}
+        WHERE USER_ID = #{userId}
+          AND ROLE_ID = #{roleId}
+    </update>
+
+    <!-- 역할 회수 -->
+    <update id="revoke">
+        UPDATE ATH_USER_ROLES
+        SET
+            REVOKED_AT = CURRENT_TIMESTAMP,
+            REVOKED_BY = #{revokedBy}
+        WHERE USER_ID = #{userId}
+          AND ROLE_ID = #{roleId}
+          AND REVOKED_AT IS NULL
+    </update>
+
+    <!-- 사용자의 모든 역할 회수 -->
+    <update id="revokeAllByUserId">
+        UPDATE ATH_USER_ROLES
+        SET
+            REVOKED_AT = CURRENT_TIMESTAMP,
+            REVOKED_BY = #{revokedBy}
+        WHERE USER_ID = #{userId}
+          AND REVOKED_AT IS NULL
+    </update>
+
+    <!-- 역할 매핑 삭제 (Hard Delete) -->
+    <delete id="delete">
+        DELETE FROM ATH_USER_ROLES
+        WHERE USER_ID = #{userId}
+          AND ROLE_ID = #{roleId}
+    </delete>
+
+</mapper>

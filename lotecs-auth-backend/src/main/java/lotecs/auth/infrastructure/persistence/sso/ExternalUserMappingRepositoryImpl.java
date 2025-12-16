@@ -7,6 +7,7 @@ import lotecs.auth.domain.sso.repository.ExternalUserMappingRepository;
 import lotecs.auth.infrastructure.persistence.sso.mapper.ExternalUserMappingMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -24,9 +25,15 @@ public class ExternalUserMappingRepositoryImpl implements ExternalUserMappingRep
     }
 
     @Override
-    public Optional<ExternalUserMapping> findByUserId(Long userId) {
-        log.debug("Finding external user mapping by userId: {}", userId);
+    public List<ExternalUserMapping> findByUserId(String userId) {
+        log.debug("Finding external user mappings by userId: {}", userId);
         return externalUserMappingMapper.findByUserId(userId);
+    }
+
+    @Override
+    public Optional<ExternalUserMapping> findByUserIdAndExternalSystem(String userId, String externalSystem) {
+        log.debug("Finding external user mapping by userId and externalSystem: userId={}, externalSystem={}", userId, externalSystem);
+        return externalUserMappingMapper.findByUserIdAndExternalSystem(userId, externalSystem);
     }
 
     @Override
@@ -39,5 +46,17 @@ public class ExternalUserMappingRepositoryImpl implements ExternalUserMappingRep
             externalUserMappingMapper.updateLastSyncedAt(mapping.getMappingId());
         }
         return mapping;
+    }
+
+    @Override
+    public void deleteByUserId(String userId) {
+        log.debug("Deleting external user mappings by userId: {}", userId);
+        externalUserMappingMapper.deleteByUserId(userId);
+    }
+
+    @Override
+    public void deleteById(String mappingId) {
+        log.debug("Deleting external user mapping by mappingId: {}", mappingId);
+        externalUserMappingMapper.deleteById(mappingId);
     }
 }

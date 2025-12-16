@@ -13,7 +13,7 @@ public interface RoleMapper {
     /**
      * ID로 역할 조회
      */
-    Optional<Role> findById(@Param("roleId") Long roleId);
+    Optional<Role> findById(@Param("roleId") String roleId);
 
     /**
      * 역할명으로 역할 조회
@@ -28,7 +28,7 @@ public interface RoleMapper {
     /**
      * 사용자 ID로 역할 목록 조회
      */
-    List<Role> findByUserId(@Param("userId") Long userId);
+    List<Role> findByUserId(@Param("userId") String userId);
 
     /**
      * 역할 등록
@@ -39,4 +39,9 @@ public interface RoleMapper {
      * 역할 정보 수정
      */
     void update(Role role);
+
+    /**
+     * 역할 삭제 (Soft Delete)
+     */
+    void delete(@Param("roleId") String roleId);
 }

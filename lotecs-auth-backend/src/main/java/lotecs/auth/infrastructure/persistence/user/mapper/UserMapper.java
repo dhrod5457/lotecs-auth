@@ -21,6 +21,11 @@ public interface UserMapper {
     Optional<User> findByUsernameAndTenantId(@Param("username") String username, @Param("tenantId") String tenantId);
 
     /**
+     * 이메일과 테넌트 ID로 사용자 조회
+     */
+    Optional<User> findByEmailAndTenantId(@Param("email") String email, @Param("tenantId") String tenantId);
+
+    /**
      * 테넌트 ID로 사용자 목록 조회 (페이징)
      */
     List<User> findByTenantId(@Param("tenantId") String tenantId, @Param("offset") int offset, @Param("limit") int limit);
@@ -41,7 +46,12 @@ public interface UserMapper {
     void update(User user);
 
     /**
-     * 사용자 삭제
+     * 사용자 삭제 (Soft Delete)
      */
     void delete(@Param("userId") String userId);
+
+    /**
+     * 사용자 삭제 (Hard Delete) - 테스트/관리용
+     */
+    void hardDelete(@Param("userId") String userId);
 }

@@ -3,6 +3,7 @@ package lotecs.auth.domain.user.model;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +29,7 @@ public class Role {
     private LocalDateTime createdAt;
     private String updatedBy;
     private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 
     @Builder.Default
     private List<Permission> permissions = new ArrayList<>();
@@ -49,5 +51,28 @@ public class Role {
         this.description = description;
         this.updatedBy = updatedBy;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 새 역할 생성
+     */
+    public static Role create(String tenantId, String roleName, String displayName, String description, int priority, String createdBy) {
+        return Role.builder()
+                .roleId(UUID.randomUUID().toString())
+                .tenantId(tenantId)
+                .roleName(roleName)
+                .displayName(displayName)
+                .description(description)
+                .priority(priority)
+                .createdBy(createdBy)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * 삭제 여부 확인
+     */
+    public boolean isDeleted() {
+        return this.deletedAt != null;
     }
 }

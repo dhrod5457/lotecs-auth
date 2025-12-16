@@ -20,30 +20,35 @@
         <result property="updatedAt" column="UPDATED_AT"/>
     </resultMap>
 
+    <!-- 공통 컬럼 -->
+    <sql id="ssoConfigColumns">
+        TENANT_ID,
+        SSO_TYPE,
+        SSO_ENABLED,
+        RELAY_ENDPOINT,
+        RELAY_TIMEOUT_MS,
+        SSO_SERVER_URL,
+        SSO_REALM,
+        SSO_CLIENT_ID,
+        SSO_CLIENT_SECRET,
+        USER_SYNC_ENABLED,
+        ROLE_MAPPING_ENABLED,
+        ADDITIONAL_CONFIG,
+        CREATED_AT,
+        UPDATED_AT
+    </sql>
+
     <!-- 테넌트 ID로 SSO 설정 조회 -->
     <select id="findByTenantId" resultMap="tenantSsoConfigResultMap">
         SELECT
-            TENANT_ID,
-            SSO_TYPE,
-            SSO_ENABLED,
-            RELAY_ENDPOINT,
-            RELAY_TIMEOUT_MS,
-            SSO_SERVER_URL,
-            SSO_REALM,
-            SSO_CLIENT_ID,
-            SSO_CLIENT_SECRET,
-            USER_SYNC_ENABLED,
-            ROLE_MAPPING_ENABLED,
-            ADDITIONAL_CONFIG,
-            CREATED_AT,
-            UPDATED_AT
-        FROM AUTH_TENANT_SSO_CONFIG
+            <include refid="ssoConfigColumns"/>
+        FROM ATH_TENANT_SSO_CONFIG
         WHERE TENANT_ID = #{tenantId}
     </select>
 
     <!-- SSO 설정 등록 -->
     <insert id="insert" parameterType="lotecs.auth.domain.sso.model.TenantSsoConfig">
-        INSERT INTO AUTH_TENANT_SSO_CONFIG (
+        INSERT INTO ATH_TENANT_SSO_CONFIG (
             TENANT_ID,
             SSO_TYPE,
             SSO_ENABLED,
@@ -78,7 +83,7 @@
 
     <!-- SSO 설정 수정 -->
     <update id="update" parameterType="lotecs.auth.domain.sso.model.TenantSsoConfig">
-        UPDATE AUTH_TENANT_SSO_CONFIG
+        UPDATE ATH_TENANT_SSO_CONFIG
         SET
             SSO_TYPE = #{ssoType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
             SSO_ENABLED = #{ssoEnabled},
@@ -97,7 +102,7 @@
 
     <!-- SSO 설정 삭제 -->
     <delete id="deleteByTenantId">
-        DELETE FROM AUTH_TENANT_SSO_CONFIG
+        DELETE FROM ATH_TENANT_SSO_CONFIG
         WHERE TENANT_ID = #{tenantId}
     </delete>
 

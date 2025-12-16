@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.token.mapper.RefreshTokenMapper">
+
+    <!-- RefreshToken ResultMap -->
+    <resultMap id="refreshTokenResultMap" type="lotecs.auth.domain.token.model.RefreshToken">
+        <id property="tokenId" column="TOKEN_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="tokenHash" column="TOKEN_HASH"/>
+        <result property="tokenFamily" column="TOKEN_FAMILY"/>
+        <result property="issuedAt" column="ISSUED_AT"/>
+        <result property="expiresAt" column="EXPIRES_AT"/>
+        <result property="revokedAt" column="REVOKED_AT"/>
+        <result property="revokedReason" column="REVOKED_REASON"/>
+        <result property="ipAddress" column="IP_ADDRESS"/>
+        <result property="userAgent" column="USER_AGENT"/>
+        <result property="deviceId" column="DEVICE_ID"/>
+        <result property="lastUsedAt" column="LAST_USED_AT"/>
+        <result property="usedCount" column="USED_COUNT"/>
+    </resultMap>
+
+    <!-- 공통 컬럼 -->
+    <sql id="refreshTokenColumns">
+        TOKEN_ID,
+        USER_ID,
+        TENANT_ID,
+        TOKEN_HASH,
+        TOKEN_FAMILY,
+        ISSUED_AT,
+        EXPIRES_AT,
+        REVOKED_AT,
+        REVOKED_REASON,
+        IP_ADDRESS,
+        USER_AGENT,
+        DEVICE_ID,
+        LAST_USED_AT,
+        USED_COUNT
+    </sql>
+
+    <!-- 토큰 ID로 조회 -->
+    <select id="findById" resultMap="refreshTokenResultMap">
+        SELECT
+            <include refid="refreshTokenColumns"/>
+        FROM ATH_REFRESH_TOKENS
+        WHERE TOKEN_ID = #{tokenId}
+    </select>
+
+    <!-- 토큰 해시로 조회 -->
+    <select id="findByTokenHash" resultMap="refreshTokenResultMap">
+        SELECT
+            <include refid="refreshTokenColumns"/>
+        FROM ATH_REFRESH_TOKENS
+        WHERE TOKEN_HASH = #{tokenHash}
+    </select>
+
+    <!-- 사용자 ID로 활성 토큰 목록 조회 -->
+    <select id="findActiveByUserId" resultMap="refreshTokenResultMap">
+        SELECT
+            <include refid="refreshTokenColumns"/>
+        FROM ATH_REFRESH_TOKENS
+        WHERE USER_ID = #{userId}
+          AND REVOKED_AT IS NULL
+          AND EXPIRES_AT > CURRENT_TIMESTAMP
+        ORDER BY ISSUED_AT DESC
+    </select>
+
+    <!-- 사용자 ID로 모든 토큰 조회 -->
+    <select id="findByUserId" resultMap="refreshTokenResultMap">
+        SELECT
+            <include refid="refreshTokenColumns"/>
+        FROM ATH_REFRESH_TOKENS
+        WHERE USER_ID = #{userId}
+        ORDER BY ISSUED_AT DESC
+    </select>
+
+    <!-- 토큰 패밀리로 조회 -->
+    <select id="findByTokenFamily" resultMap="refreshTokenResultMap">
+        SELECT
+            <include refid="refreshTokenColumns"/>
+        FROM ATH_REFRESH_TOKENS
+        WHERE TOKEN_FAMILY = #{tokenFamily}
+        ORDER BY ISSUED_AT DESC
+    </select>
+
+    <!-- 디바이스 ID로 활성 토큰 조회 -->
+    <select id="findActiveByDeviceId" resultMap="refreshTokenResultMap">
+        SELECT
+            <include refid="refreshTokenColumns"/>
+        FROM ATH_REFRESH_TOKENS
+        WHERE USER_ID = #{userId}
+          AND DEVICE_ID = #{deviceId}
+          AND REVOKED_AT IS NULL
+          AND EXPIRES_AT > CURRENT_TIMESTAMP
+        ORDER BY ISSUED_AT DESC
+        FETCH FIRST 1 ROWS ONLY
+    </select>
+
+    <!-- 토큰 저장 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.token.model.RefreshToken">
+        INSERT INTO ATH_REFRESH_TOKENS (
+            TOKEN_ID,
+            USER_ID,
+            TENANT_ID,
+            TOKEN_HASH,
+            TOKEN_FAMILY,
+            ISSUED_AT,
+            EXPIRES_AT,
+            IP_ADDRESS,
+            USER_AGENT,
+            DEVICE_ID,
+            USED_COUNT
+        ) VALUES (
+            #{tokenId},
+            #{userId},
+            #{tenantId},
+            #{tokenHash},
+            #{tokenFamily},
+            #{issuedAt},
+            #{expiresAt},
+            #{ipAddress},
+            #{userAgent},
+            #{deviceId},
+            #{usedCount}
+        )
+    </insert>
+
+    <!-- 토큰 사용 기록 업데이트 -->
+    <update id="updateUsage">
+        UPDATE ATH_REFRESH_TOKENS
+        SET LAST_USED_AT = CURRENT_TIMESTAMP,
+            USED_COUNT = USED_COUNT + 1
+        WHERE TOKEN_ID = #{tokenId}
+    </update>
+
+    <!-- 토큰 회수 -->
+    <update id="revoke">
+        UPDATE ATH_REFRESH_TOKENS
+        SET REVOKED_AT = CURRENT_TIMESTAMP,
+            REVOKED_REASON = #{reason}
+        WHERE TOKEN_ID = #{tokenId}
+          AND REVOKED_AT IS NULL
+    </update>
+
+    <!-- 토큰 패밀리 전체 회수 -->
+    <update id="revokeByFamily">
+        UPDATE ATH_REFRESH_TOKENS
+        SET REVOKED_AT = CURRENT_TIMESTAMP,
+            REVOKED_REASON = #{reason}
+        WHERE TOKEN_FAMILY = #{tokenFamily}
+          AND REVOKED_AT IS NULL
+    </update>
+
+    <!-- 사용자의 모든 토큰 회수 -->
+    <update id="revokeAllByUserId">
+        UPDATE ATH_REFRESH_TOKENS
+        SET REVOKED_AT = CURRENT_TIMESTAMP,
+            REVOKED_REASON = #{reason}
+        WHERE USER_ID = #{userId}
+          AND REVOKED_AT IS NULL
+    </update>
+
+    <!-- 만료된 토큰 삭제 -->
+    <delete id="deleteExpiredTokens">
+        DELETE FROM ATH_REFRESH_TOKENS
+        WHERE EXPIRES_AT &lt; #{beforeDate}
+          OR (REVOKED_AT IS NOT NULL AND REVOKED_AT &lt; #{beforeDate})
+    </delete>
+
+    <!-- 토큰 삭제 -->
+    <delete id="delete">
+        DELETE FROM ATH_REFRESH_TOKENS
+        WHERE TOKEN_ID = #{tokenId}
+    </delete>
+
+</mapper>

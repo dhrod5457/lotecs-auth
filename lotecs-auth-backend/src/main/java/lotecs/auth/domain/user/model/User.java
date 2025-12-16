@@ -42,6 +42,7 @@ public class User {
     private LocalDateTime createdAt;
     private String updatedBy;
     private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
 
     @Builder.Default
     private List<Role> roles = new ArrayList<>();
@@ -153,6 +154,13 @@ public class User {
     public void updateRoles(List<Role> roles) {
         this.roles.clear();
         this.roles.addAll(roles);
+    }
+
+    /**
+     * 삭제 여부 확인
+     */
+    public boolean isDeleted() {
+        return this.deletedAt != null;
     }
 
 }

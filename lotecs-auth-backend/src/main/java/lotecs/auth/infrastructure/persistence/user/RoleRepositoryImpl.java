@@ -18,7 +18,7 @@ public class RoleRepositoryImpl implements RoleRepository {
     private final RoleMapper roleMapper;
 
     @Override
-    public Optional<Role> findById(Long roleId) {
+    public Optional<Role> findById(String roleId) {
         log.debug("Finding role by id: {}", roleId);
         return roleMapper.findById(roleId);
     }
@@ -36,6 +36,12 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
+    public List<Role> findByUserId(String userId) {
+        log.debug("Finding roles by userId: {}", userId);
+        return roleMapper.findByUserId(userId);
+    }
+
+    @Override
     public Role save(Role role) {
         if (role.getRoleId() == null) {
             log.debug("Inserting new role: roleName={}", role.getRoleName());
@@ -45,5 +51,11 @@ public class RoleRepositoryImpl implements RoleRepository {
             roleMapper.update(role);
         }
         return role;
+    }
+
+    @Override
+    public void delete(String roleId) {
+        log.debug("Deleting role: roleId={}", roleId);
+        roleMapper.delete(roleId);
     }
 }

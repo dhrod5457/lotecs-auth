@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.user.mapper.RolePermissionMapper">
+
+    <!-- RolePermission ResultMap -->
+    <resultMap id="rolePermissionResultMap" type="lotecs.auth.domain.user.model.RolePermission">
+        <id property="roleId" column="ROLE_ID"/>
+        <id property="permissionId" column="PERMISSION_ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="grantedAt" column="GRANTED_AT"/>
+        <result property="grantedBy" column="GRANTED_BY"/>
+    </resultMap>
+
+    <!-- 공통 컬럼 -->
+    <sql id="rolePermissionColumns">
+        ROLE_ID,
+        PERMISSION_ID,
+        TENANT_ID,
+        GRANTED_AT,
+        GRANTED_BY
+    </sql>
+
+    <!-- 역할-권한 매핑 조회 -->
+    <select id="findByRoleIdAndPermissionId" resultMap="rolePermissionResultMap">
+        SELECT
+            <include refid="rolePermissionColumns"/>
+        FROM ATH_ROLE_PERMISSIONS
+        WHERE ROLE_ID = #{roleId}
+          AND PERMISSION_ID = #{permissionId}
+    </select>
+
+    <!-- 역할 ID로 권한 매핑 목록 조회 -->
+    <select id="findByRoleId" resultMap="rolePermissionResultMap">
+        SELECT
+            <include refid="rolePermissionColumns"/>
+        FROM ATH_ROLE_PERMISSIONS
+        WHERE ROLE_ID = #{roleId}
+        ORDER BY GRANTED_AT DESC
+    </select>
+
+    <!-- 권한 ID로 역할 매핑 목록 조회 -->
+    <select id="findByPermissionId" resultMap="rolePermissionResultMap">
+        SELECT
+            <include refid="rolePermissionColumns"/>
+        FROM ATH_ROLE_PERMISSIONS
+        WHERE PERMISSION_ID = #{permissionId}
+        ORDER BY GRANTED_AT DESC
+    </select>
+
+    <!-- 테넌트 ID로 매핑 목록 조회 -->
+    <select id="findByTenantId" resultMap="rolePermissionResultMap">
+        SELECT
+            <include refid="rolePermissionColumns"/>
+        FROM ATH_ROLE_PERMISSIONS
+        WHERE TENANT_ID = #{tenantId}
+        ORDER BY GRANTED_AT DESC
+    </select>
+
+    <!-- 권한 부여 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.user.model.RolePermission">
+        INSERT INTO ATH_ROLE_PERMISSIONS (
+            ROLE_ID,
+            PERMISSION_ID,
+            TENANT_ID,
+            GRANTED_AT,
+            GRANTED_BY
+        ) VALUES (
+            #{roleId},
+            #{permissionId},
+            #{tenantId},
+            #{grantedAt},
+            #{grantedBy}
+        )
+    </insert>
+
+    <!-- 권한 부여 (Batch) -->
+    <insert id="insertBatch" parameterType="list">
+        INSERT INTO ATH_ROLE_PERMISSIONS (
+            ROLE_ID,
+            PERMISSION_ID,
+            TENANT_ID,
+            GRANTED_AT,
+            GRANTED_BY
+        )
+        SELECT
+            A.ROLE_ID,
+            A.PERMISSION_ID,
+            A.TENANT_ID,
+            A.GRANTED_AT,
+            A.GRANTED_BY
+        FROM (
+            <foreach collection="rolePermissions" item="rp" separator=" UNION ALL ">
+                SELECT
+                    #{rp.roleId} AS ROLE_ID,
+                    #{rp.permissionId} AS PERMISSION_ID,
+                    #{rp.tenantId} AS TENANT_ID,
+                    #{rp.grantedAt} AS GRANTED_AT,
+                    #{rp.grantedBy} AS GRANTED_BY
+                FROM DUAL
+            </foreach>
+        ) A
+    </insert>
+
+    <!-- 권한 회수 -->
+    <delete id="delete">
+        DELETE FROM ATH_ROLE_PERMISSIONS
+        WHERE ROLE_ID = #{roleId}
+          AND PERMISSION_ID = #{permissionId}
+    </delete>
+
+    <!-- 역할의 모든 권한 회수 -->
+    <delete id="deleteAllByRoleId">
+        DELETE FROM ATH_ROLE_PERMISSIONS
+        WHERE ROLE_ID = #{roleId}
+    </delete>
+
+    <!-- 권한에 연결된 모든 역할 매핑 삭제 -->
+    <delete id="deleteAllByPermissionId">
+        DELETE FROM ATH_ROLE_PERMISSIONS
+        WHERE PERMISSION_ID = #{permissionId}
+    </delete>
+
+</mapper>
