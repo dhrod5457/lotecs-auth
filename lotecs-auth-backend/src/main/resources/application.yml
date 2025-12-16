@@ -1,0 +1,371 @@
+server:
+  port: 8000
+
+grpc:
+  server:
+    port: 9110
+    max-inbound-message-size: 4MB
+    keep-alive-time: 30s
+    keep-alive-timeout: 10s
+    permit-keep-alive-time: 5s
+
+spring:
+  application:
+    name: lotecs-auth
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: jdbc:oracle:thin:@//192.168.0.57:1521/xepdb1
+    username: lotecs_auth
+    password: ${AUTH_DB_PASSWORD:lotecs9240}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.0.57}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/**/*.xml
+  type-aliases-package: lotecs.auth.domain.model
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    lazy-loading-enabled: false
+    default-fetch-size: 100
+    default-statement-timeout: 30
+  configuration-properties:
+    jdbcTypeForNull: 'NULL'
+
+lotecs:
+  # Util 설정
+  util:
+    enabled: true
+    core:
+      environment-enabled: true
+      health-enabled: true
+      health:
+        metrics-enabled: true
+        service-enabled: true
+    web:
+      sse-enabled: true
+      client-ip-resolver-enabled: true
+
+  # 멀티테넌시 설정 (tenant-spring-boot-starter)
+  tenant:
+    enabled: true
+    default-tenant-id: SYSTEM
+    context:
+      use-inheritable: false
+      use-grpc-context: true
+    mdc:
+      enabled: true
+      key: tenantId
+    validation:
+      required: false
+      max-length: 50
+      pattern: "^[A-Za-z0-9_-]+$"
+    web:
+      enabled: true
+      filter:
+        order: 1
+        registration-type: FILTER_REGISTRATION_BEAN
+        filter-name: tenantContextFilter
+        url-patterns:
+          - "/*"
+        exclude-patterns:
+          - "/health"
+          - "/actuator/**"
+          - "/swagger-ui/**"
+          - "/v3/api-docs/**"
+      resolver:
+        header:
+          enabled: true
+          header-name: X-Tenant-Id
+          order: 0
+        path-variable:
+          enabled: false
+        query-param:
+          enabled: false
+    mybatis:
+      enabled: true
+      strategy: ROW_LEVEL
+      column-name: tenant_id
+    grpc:
+      enabled: true
+      header-name: X-Tenant-Id
+      sync-thread-local: true
+      default-tenant-id: SYSTEM
+
+  # LOTECS 로깅 프레임워크 설정
+  logging:
+    enabled: true
+    service-name: lotecs-auth
+    environment: ${SPRING_PROFILES_ACTIVE:local}
+    buffer:
+      ring-buffer-size: 65536
+      memory-buffer-size: 10000
+      wait-strategy: blocking
+      tenant-buffer-enabled: true
+      tenant-buffer-size: 1000
+    api:
+      enabled: true
+      base-path: /api/logs
+      security:
+        enabled: false
+    masking:
+      enabled: true
+      exclude-loggers: [ ]
+      exclude-levels: [ ]
+    multi-tenant:
+      enabled: true
+      default-tenant-id: default
+      header-name: X-Tenant-ID
+      jwt-claim-name: tenant_id
+    exporter:
+      loki:
+        enabled: true
+        url: ${LOKI_URL:http://192.168.0.57:3100}
+        push-path: /loki/api/v1/push
+        ready-path: /ready
+        timeout-seconds: 30
+        include-tenant-label: true
+        static-labels:
+          app: lotecs-auth
+          env: ${SPRING_PROFILES_ACTIVE:local}
+          version: ${APP_VERSION:1.0.0}
+        dynamic-label-keys:
+          - tenant_id
+          - user_id
+        buffer-size: 10000
+        batch-size: 100
+        flush-interval-ms: 1000
+        retry-count: 3
+        retry-delay-ms: 1000
+      file:
+        enabled: true
+        base-path: ${LOG_PATH:logs}/lotecs
+        path-pattern: "{service}/{date}/{tenant}.log"
+        format: JSON
+        max-file-size: "100MB"
+        max-file-age: "PT24H"
+        compress-rolled: true
+        max-history: 30
+        buffer-size: 5000
+        batch-size: 100
+        flush-interval-ms: 500
+      slack:
+        enabled: ${SLACK_ENABLED:false}
+        webhook-url: ${SLACK_WEBHOOK_URL:}
+        channel: ${SLACK_CHANNEL:#auth-monitor}
+        username: "LOTECS-AUTH"
+        icon-emoji: ":warning:"
+        alert-levels:
+          - ERROR
+        include-stack-trace: true
+        max-stack-trace-lines: 10
+
+  # JWT 설정
+  jwt:
+    enabled: true
+    secret: ${LOTECS_JWT_SECRET:lotecs-auth-secret-key-change-in-production}
+    access-token-validity-seconds: 900
+    refresh-token-validity-seconds: 604800
+    refresh-threshold-seconds: 300
+    issuer: "lotecs-platform"
+    audience: "lotecs-services"
+    clock-skew-seconds: 30
+    web:
+      enabled: true
+      filter:
+        exclude-paths:
+          - /api/auth/**
+          - /api/public/**
+          - /actuator/**
+          - /health/**
+        query-parameter-name: token
+        token-expired-header:
+          enabled: true
+          header-name: X-Token-Expired
+          header-value: "true"
+        clear-context-after-chain: true
+      role-authority:
+        use-prefix: true
+        prefix: "ROLE_"
+      authority-claim:
+        enabled: true
+        claim-key: "authorities"
+        merge-with-roles: true
+
+  # Crypto 모듈 설정
+  crypto:
+    enabled: true
+    default-algorithm: AES_256_GCM
+    aes:
+      key-size: 256
+      iv-length: 12
+      auth-tag-length: 128
+    rsa:
+      key-size: 2048
+    hashing:
+      default-algorithm: BCRYPT
+      bcrypt-rounds: 12
+    security:
+      key-strength-validation: true
+      minimum-key-length: 128
+      prevent-sensitive-logging: true
+      audit-enabled: true
+    aop:
+      enabled: true
+    key-management:
+      provider: MEMORY
+      master-key: ${CRYPTO_MASTER_KEY:YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=}
+
+  # Rate Limit 모듈 설정 (ratelimit-spring-boot-starter)
+  ratelimit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    default-policy:
+      capacity: 100
+      refill-tokens: 100
+      refill-period-minutes: 1
+    response-headers:
+      enabled: true
+    monitoring:
+      enabled: true
+      log-exceeded: true
+      alert-slack: false
+    cache:
+      policy-ttl-minutes: 5
+    filter:
+      order: 10
+      exclude-paths:
+        - /actuator/**
+        - /health/**
+        - /favicon.ico
+        - /swagger-ui/**
+        - /v3/api-docs/**
+    redis:
+      host: ${REDIS_HOST:192.168.0.57}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      connection-pool-size: 50
+      connection-minimum-idle-size: 10
+      retry-attempts: 3
+      retry-interval: 1500
+      timeout: 3000
+      bucket-expiration-minutes: 10
+
+  # MyBatis 프레임워크 설정
+  mybatis:
+    naming-strategy: CAMEL_CASE
+    enum-strategy: NAME
+    boolean-strategy: ONE_ZERO
+    default-fetch-size: 100
+    default-statement-timeout: 30
+    cache-enabled: false
+    lazy-loading-enabled: false
+    monitoring:
+      enabled: true
+      slow-query-threshold: 1000
+
+  # Exception 모듈 설정
+  exception:
+    response-format: common-response
+    include-trace-id: true
+    include-timestamp: true
+    hide-server-error-details: true
+    include-stack-trace: false
+
+  # Web 모듈 설정
+  web:
+    enabled: true
+    cors:
+      allowed-origins: "*"
+      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
+      allowed-headers: "*"
+
+  # Cache 모듈 설정
+  cache:
+    enabled: false
+
+# 인증 서비스 전용 설정
+auth:
+  sso:
+    relay:
+      enabled: true
+      default-timeout-ms: 5000
+      keepalive-time-seconds: 30
+      keepalive-timeout-seconds: 10
+    keycloak:
+      enabled: true
+    ldap:
+      enabled: true
+
+  password:
+    bcrypt-strength: 10
+
+  login:
+    max-failed-attempts: 5
+    lock-duration-minutes: 30
+
+logging:
+  backend:
+    type: ${LOG_BACKEND_TYPE:loki}
+  file:
+    path: ${LOG_PATH:logs}
+  level:
+    root: INFO
+    lotecs.auth: DEBUG
+    lotecs.framework: INFO
+    org.springframework.security: DEBUG
+    org.mybatis: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: ping
+        readiness:
+          include: db,redis
+      validate-group-membership: false
+  health:
+    defaults:
+      enabled: true
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true

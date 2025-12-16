@@ -1,0 +1,4 @@
+rootProject.name = 'lotecs-auth'
+
+include 'lotecs-auth-grpc-api'
+include 'lotecs-auth-backend'

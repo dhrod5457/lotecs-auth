@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.sso.mapper.ExternalUserMappingMapper">
+
+    <!-- ExternalUserMapping ResultMap -->
+    <resultMap id="externalUserMappingResultMap" type="lotecs.auth.domain.sso.model.ExternalUserMapping">
+        <id property="mappingId" column="MAPPING_ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="externalUserId" column="EXTERNAL_USER_ID"/>
+        <result property="externalSystem" column="EXTERNAL_SYSTEM"/>
+        <result property="lastSyncedAt" column="LAST_SYNCED_AT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <!-- 외부 사용자 ID로 매핑 조회 -->
+    <select id="findByExternalUserId" resultMap="externalUserMappingResultMap">
+        SELECT
+            MAPPING_ID,
+            TENANT_ID,
+            USER_ID,
+            EXTERNAL_USER_ID,
+            EXTERNAL_SYSTEM,
+            LAST_SYNCED_AT,
+            CREATED_AT
+        FROM AUTH_EXTERNAL_USER_MAPPING
+        WHERE EXTERNAL_USER_ID = #{externalUserId}
+          AND EXTERNAL_SYSTEM = #{externalSystem}
+          AND TENANT_ID = #{tenantId}
+    </select>
+
+    <!-- 사용자 ID로 매핑 조회 -->
+    <select id="findByUserId" resultMap="externalUserMappingResultMap">
+        SELECT
+            MAPPING_ID,
+            TENANT_ID,
+            USER_ID,
+            EXTERNAL_USER_ID,
+            EXTERNAL_SYSTEM,
+            LAST_SYNCED_AT,
+            CREATED_AT
+        FROM AUTH_EXTERNAL_USER_MAPPING
+        WHERE USER_ID = #{userId}
+    </select>
+
+    <!-- 매핑 등록 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.sso.model.ExternalUserMapping">
+        <selectKey keyProperty="mappingId" resultType="long" order="BEFORE">
+            SELECT AUTH_EXTERNAL_USER_MAPPING_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO AUTH_EXTERNAL_USER_MAPPING (
+            MAPPING_ID,
+            TENANT_ID,
+            USER_ID,
+            EXTERNAL_USER_ID,
+            EXTERNAL_SYSTEM,
+            LAST_SYNCED_AT,
+            CREATED_AT
+        ) VALUES (
+            #{mappingId},
+            #{tenantId},
+            #{userId},
+            #{externalUserId},
+            #{externalSystem},
+            #{lastSyncedAt},
+            #{createdAt}
+        )
+    </insert>
+
+    <!-- 마지막 동기화 시간 업데이트 -->
+    <update id="updateLastSyncedAt">
+        UPDATE AUTH_EXTERNAL_USER_MAPPING
+        SET LAST_SYNCED_AT = SYSTIMESTAMP
+        WHERE MAPPING_ID = #{mappingId}
+    </update>
+
+    <!-- 매핑 삭제 -->
+    <delete id="deleteByUserId">
+        DELETE FROM AUTH_EXTERNAL_USER_MAPPING
+        WHERE USER_ID = #{userId}
+    </delete>
+
+</mapper>

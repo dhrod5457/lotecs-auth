@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.sso.mapper.TenantSsoConfigMapper">
+
+    <!-- TenantSsoConfig ResultMap -->
+    <resultMap id="tenantSsoConfigResultMap" type="lotecs.auth.domain.sso.model.TenantSsoConfig">
+        <id property="tenantId" column="TENANT_ID"/>
+        <result property="ssoType" column="SSO_TYPE" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="ssoEnabled" column="SSO_ENABLED"/>
+        <result property="relayEndpoint" column="RELAY_ENDPOINT"/>
+        <result property="relayTimeoutMs" column="RELAY_TIMEOUT_MS"/>
+        <result property="ssoServerUrl" column="SSO_SERVER_URL"/>
+        <result property="ssoRealm" column="SSO_REALM"/>
+        <result property="ssoClientId" column="SSO_CLIENT_ID"/>
+        <result property="ssoClientSecret" column="SSO_CLIENT_SECRET"/>
+        <result property="userSyncEnabled" column="USER_SYNC_ENABLED"/>
+        <result property="roleMappingEnabled" column="ROLE_MAPPING_ENABLED"/>
+        <result property="additionalConfig" column="ADDITIONAL_CONFIG"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <!-- 테넌트 ID로 SSO 설정 조회 -->
+    <select id="findByTenantId" resultMap="tenantSsoConfigResultMap">
+        SELECT
+            TENANT_ID,
+            SSO_TYPE,
+            SSO_ENABLED,
+            RELAY_ENDPOINT,
+            RELAY_TIMEOUT_MS,
+            SSO_SERVER_URL,
+            SSO_REALM,
+            SSO_CLIENT_ID,
+            SSO_CLIENT_SECRET,
+            USER_SYNC_ENABLED,
+            ROLE_MAPPING_ENABLED,
+            ADDITIONAL_CONFIG,
+            CREATED_AT,
+            UPDATED_AT
+        FROM AUTH_TENANT_SSO_CONFIG
+        WHERE TENANT_ID = #{tenantId}
+    </select>
+
+    <!-- SSO 설정 등록 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.sso.model.TenantSsoConfig">
+        INSERT INTO AUTH_TENANT_SSO_CONFIG (
+            TENANT_ID,
+            SSO_TYPE,
+            SSO_ENABLED,
+            RELAY_ENDPOINT,
+            RELAY_TIMEOUT_MS,
+            SSO_SERVER_URL,
+            SSO_REALM,
+            SSO_CLIENT_ID,
+            SSO_CLIENT_SECRET,
+            USER_SYNC_ENABLED,
+            ROLE_MAPPING_ENABLED,
+            ADDITIONAL_CONFIG,
+            CREATED_AT,
+            UPDATED_AT
+        ) VALUES (
+            #{tenantId},
+            #{ssoType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            #{ssoEnabled},
+            #{relayEndpoint},
+            #{relayTimeoutMs},
+            #{ssoServerUrl},
+            #{ssoRealm},
+            #{ssoClientId},
+            #{ssoClientSecret},
+            #{userSyncEnabled},
+            #{roleMappingEnabled},
+            #{additionalConfig},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <!-- SSO 설정 수정 -->
+    <update id="update" parameterType="lotecs.auth.domain.sso.model.TenantSsoConfig">
+        UPDATE AUTH_TENANT_SSO_CONFIG
+        SET
+            SSO_TYPE = #{ssoType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            SSO_ENABLED = #{ssoEnabled},
+            RELAY_ENDPOINT = #{relayEndpoint},
+            RELAY_TIMEOUT_MS = #{relayTimeoutMs},
+            SSO_SERVER_URL = #{ssoServerUrl},
+            SSO_REALM = #{ssoRealm},
+            SSO_CLIENT_ID = #{ssoClientId},
+            SSO_CLIENT_SECRET = #{ssoClientSecret},
+            USER_SYNC_ENABLED = #{userSyncEnabled},
+            ROLE_MAPPING_ENABLED = #{roleMappingEnabled},
+            ADDITIONAL_CONFIG = #{additionalConfig},
+            UPDATED_AT = #{updatedAt}
+        WHERE TENANT_ID = #{tenantId}
+    </update>
+
+    <!-- SSO 설정 삭제 -->
+    <delete id="deleteByTenantId">
+        DELETE FROM AUTH_TENANT_SSO_CONFIG
+        WHERE TENANT_ID = #{tenantId}
+    </delete>
+
+</mapper>

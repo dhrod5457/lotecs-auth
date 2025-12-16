@@ -1,0 +1,66 @@
+spring:
+  application:
+    name: lotecs-auth-backend-test
+
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: false
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+server:
+  port: 0
+
+grpc:
+  server:
+    port: 0
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/**/*.xml
+  type-aliases-package: lotecs.auth.domain.model
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 30
+
+logging:
+  level:
+    lotecs.auth: DEBUG
+    org.mybatis: DEBUG
+    org.springframework: INFO
+
+management:
+  health:
+    redis:
+      enabled: false
+
+lotecs:
+  jwt:
+    secret: 5K9mP2nQ7rT8uV3wX6yZ1aB4cD7eF0gH2iJ5kL8mN1oP4qR7sT0uV3wX6yZ9aB2cD
+    access-token-validity: 900000
+    refresh-token-validity: 604800000
+  cache:
+    enabled: false
+    type: none
+  crypto:
+    enabled: false
+  logging:
+    enabled: false
+  tenant:
+    enabled: true
+    default-tenant-id: TEST-TENANT
+  exception:
+    enabled: true
+  web:
+    enabled: true
+  ratelimit:
+    enabled: false

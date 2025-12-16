@@ -1,0 +1,62 @@
+# Local 환경 전용 설정
+spring:
+  datasource:
+    url: jdbc:oracle:thin:@//192.168.0.37:1521/xepdb1
+    username: lotecs_auth
+    password: ${DB_PASSWORD:}
+
+  data:
+    redis:
+      host: 192.168.0.57
+      port: 6379
+
+loki:
+  url: ${LOKI_URL:http://192.168.0.57:3100}
+
+lotecs:
+  logging:
+    environment: local
+    exporter:
+      loki:
+        url: ${LOKI_URL:http://192.168.0.57:3100}
+
+  jwt:
+    secret: ${LOTECS_JWT_SECRET:lotecs-auth-local-secret-key-2025}
+
+  crypto:
+    key-management:
+      master-key: ${CRYPTO_MASTER_KEY:YWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXoxMjM0NTY=}
+
+  ratelimit:
+    redis:
+      host: 192.168.0.57
+      port: 6379
+
+  tenant:
+    enabled: true
+    default-tenant-id: SYSTEM
+    context:
+      use-inheritable: false
+      use-grpc-context: true
+    mdc:
+      enabled: true
+      key: tenantId
+    web:
+      enabled: true
+      filter:
+        registration-type: FILTER_REGISTRATION_BEAN
+    mybatis:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    lotecs.auth: DEBUG
+    lotecs.framework: DEBUG
+    org.springframework.security: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -1,0 +1,46 @@
+# Dev 환경 전용 설정
+spring:
+  datasource:
+    url: ${AUTH_DB_URL:jdbc:oracle:thin:@//192.168.0.57:1521/xepdb1}
+    username: ${AUTH_DB_USERNAME:lotecs_auth}
+    password: ${AUTH_DB_PASSWORD}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.0.57}
+      port: ${REDIS_PORT:6379}
+
+loki:
+  url: ${LOKI_URL:http://192.168.0.57:3100}
+
+lotecs:
+  logging:
+    environment: dev
+    exporter:
+      loki:
+        url: ${LOKI_URL:http://192.168.0.57:3100}
+
+  jwt:
+    secret: ${LOTECS_JWT_SECRET}
+
+  crypto:
+    key-management:
+      master-key: ${CRYPTO_MASTER_KEY}
+
+  ratelimit:
+    redis:
+      host: ${REDIS_HOST:192.168.0.57}
+      port: ${REDIS_PORT:6379}
+
+logging:
+  level:
+    root: INFO
+    lotecs.auth: DEBUG
+    lotecs.framework: DEBUG
+    org.springframework.security: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

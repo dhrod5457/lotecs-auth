@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.user.mapper.RoleMapper">
+
+    <!-- Role ResultMap -->
+    <resultMap id="roleResultMap" type="lotecs.auth.domain.user.model.Role">
+        <id property="roleId" column="ROLE_ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="roleName" column="ROLE_NAME"/>
+        <result property="displayName" column="DISPLAY_NAME"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="priority" column="PRIORITY"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedBy" column="UPDATED_BY"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <!-- ID로 역할 조회 -->
+    <select id="findById" resultMap="roleResultMap">
+        SELECT
+            ROLE_ID,
+            TENANT_ID,
+            ROLE_NAME,
+            DISPLAY_NAME,
+            DESCRIPTION,
+            PRIORITY,
+            CREATED_BY,
+            CREATED_AT,
+            UPDATED_BY,
+            UPDATED_AT
+        FROM AUTH_ROLES
+        WHERE ROLE_ID = #{roleId}
+    </select>
+
+    <!-- 역할명으로 역할 조회 -->
+    <select id="findByRoleName" resultMap="roleResultMap">
+        SELECT
+            ROLE_ID,
+            TENANT_ID,
+            ROLE_NAME,
+            DISPLAY_NAME,
+            DESCRIPTION,
+            PRIORITY,
+            CREATED_BY,
+            CREATED_AT,
+            UPDATED_BY,
+            UPDATED_AT
+        FROM AUTH_ROLES
+        WHERE ROLE_NAME = #{roleName}
+          AND TENANT_ID = #{tenantId}
+    </select>
+
+    <!-- 테넌트 ID로 역할 목록 조회 -->
+    <select id="findByTenantId" resultMap="roleResultMap">
+        SELECT
+            ROLE_ID,
+            TENANT_ID,
+            ROLE_NAME,
+            DISPLAY_NAME,
+            DESCRIPTION,
+            PRIORITY,
+            CREATED_BY,
+            CREATED_AT,
+            UPDATED_BY,
+            UPDATED_AT
+        FROM AUTH_ROLES
+        WHERE TENANT_ID = #{tenantId}
+        ORDER BY PRIORITY ASC, ROLE_NAME ASC
+    </select>
+
+    <!-- 사용자 ID로 역할 목록 조회 -->
+    <select id="findByUserId" resultMap="roleResultMap">
+        SELECT
+            R.ROLE_ID,
+            R.TENANT_ID,
+            R.ROLE_NAME,
+            R.DISPLAY_NAME,
+            R.DESCRIPTION,
+            R.PRIORITY,
+            R.CREATED_BY,
+            R.CREATED_AT,
+            R.UPDATED_BY,
+            R.UPDATED_AT
+        FROM AUTH_ROLES R
+        INNER JOIN AUTH_USER_ROLES UR ON R.ROLE_ID = UR.ROLE_ID
+        WHERE UR.USER_ID = #{userId}
+        ORDER BY R.PRIORITY ASC, R.ROLE_NAME ASC
+    </select>
+
+    <!-- 역할 등록 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.user.model.Role">
+        <selectKey keyProperty="roleId" resultType="long" order="BEFORE">
+            SELECT AUTH_ROLES_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO AUTH_ROLES (
+            ROLE_ID,
+            TENANT_ID,
+            ROLE_NAME,
+            DISPLAY_NAME,
+            DESCRIPTION,
+            PRIORITY,
+            CREATED_BY,
+            CREATED_AT,
+            UPDATED_BY,
+            UPDATED_AT
+        ) VALUES (
+            #{roleId},
+            #{tenantId},
+            #{roleName},
+            #{displayName},
+            #{description},
+            #{priority},
+            #{createdBy},
+            #{createdAt},
+            #{updatedBy},
+            #{updatedAt}
+        )
+    </insert>
+
+    <!-- 역할 정보 수정 -->
+    <update id="update" parameterType="lotecs.auth.domain.user.model.Role">
+        UPDATE AUTH_ROLES
+        SET
+            DISPLAY_NAME = #{displayName},
+            DESCRIPTION = #{description},
+            PRIORITY = #{priority},
+            UPDATED_BY = #{updatedBy},
+            UPDATED_AT = #{updatedAt}
+        WHERE ROLE_ID = #{roleId}
+    </update>
+
+</mapper>

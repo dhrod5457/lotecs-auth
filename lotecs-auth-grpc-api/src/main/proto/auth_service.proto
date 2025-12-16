@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package lotecs.auth.grpc;
+
+option java_multiple_files = true;
+option java_package = "com.lotecs.auth.grpc";
+option java_outer_classname = "AuthServiceProto";
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  rpc GetUserById(GetUserByIdRequest) returns (UserResponse);
+  rpc GetUserByUsername(GetUserByUsernameRequest) returns (UserResponse);
+  rpc GetUsers(GetUsersRequest) returns (GetUsersResponse);
+
+  rpc CreateUser(CreateUserRequest) returns (UserResponse);
+  rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+  rpc CheckPermission(PermissionCheckRequest) returns (PermissionCheckResponse);
+}
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+  string tenant_id = 3;
+  string ip_address = 4;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int32 expires_in = 3;
+  UserInfo user = 4;
+  string sso_type = 5;
+}
+
+message LogoutRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+}
+
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int32 expires_in = 3;
+}
+
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  UserInfo user = 2;
+  string error_message = 3;
+}
+
+message GetUserByIdRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+}
+
+message GetUserByUsernameRequest {
+  string username = 1;
+  string tenant_id = 2;
+}
+
+message GetUsersRequest {
+  string tenant_id = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+message GetUsersResponse {
+  repeated UserInfo users = 1;
+  int64 total = 2;
+}
+
+message CreateUserRequest {
+  string tenant_id = 1;
+  string username = 2;
+  string password = 3;
+  string email = 4;
+  string full_name = 5;
+  repeated string roles = 6;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string email = 3;
+  string full_name = 4;
+  string status = 5;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UserResponse {
+  UserInfo user = 1;
+  string error_message = 2;
+}
+
+message UserInfo {
+  string user_id = 1;
+  string tenant_id = 2;
+  string username = 3;
+  string email = 4;
+  string full_name = 5;
+  string status = 6;
+  repeated string roles = 7;
+  repeated string permissions = 8;
+  string external_user_id = 9;
+  string external_system = 10;
+}
+
+message PermissionCheckRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string permission_code = 3;
+}
+
+message PermissionCheckResponse {
+  bool has_permission = 1;
+}

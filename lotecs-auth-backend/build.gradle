@@ -1,0 +1,112 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'org.springframework.boot' version "${springBootVersion}"
+    id 'io.spring.dependency-management' version "${dependencyManagementVersion}"
+}
+
+group = 'com.lotecs'
+version = '1.0.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    maven {
+        url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
+        credentials {
+            username = project.findProperty('nexusUsername') ?: ''
+            password = project.findProperty('nexusPassword') ?: ''
+        }
+    }
+    mavenCentral()
+}
+
+dependencies {
+    // LOTECS Framework
+    implementation 'lotecs.framework:lotecs-core:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-jwt-core:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-jwt-web:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-cache-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-crypto-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-logging-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-tenant-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-mybatis-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-exception-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-web-spring-boot-starter:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-ratelimit-spring-boot-starter:1.0.0-SNAPSHOT'
+
+    // gRPC API
+    implementation project(':lotecs-auth-grpc-api')
+
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // gRPC
+    implementation 'net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE'
+    implementation 'net.devh:grpc-client-spring-boot-starter:2.15.0.RELEASE'
+
+    // MyBatis
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+
+    // Database
+    runtimeOnly 'com.oracle.database.jdbc:ojdbc8:23.3.0.23.09'
+    testRuntimeOnly 'com.h2database:h2:2.2.224'
+
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // Keycloak Admin Client (for SSO)
+    implementation 'org.keycloak:keycloak-admin-client:23.0.3'
+
+    // Apache Directory API (for LDAP SSO)
+    implementation 'org.apache.directory.api:api-all:2.1.5'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // MapStruct
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    testAnnotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-parameters']
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        cacheChangingModulesFor(0, "seconds")
+        cacheDynamicVersionsFor(0, "seconds")
+    }
+}

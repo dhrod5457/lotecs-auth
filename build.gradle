@@ -1,0 +1,28 @@
+subprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+
+    afterEvaluate {
+        if (plugins.hasPlugin('java')) {
+            java {
+                sourceCompatibility = JavaVersion.VERSION_21
+                targetCompatibility = JavaVersion.VERSION_21
+            }
+
+            tasks.withType(JavaCompile).configureEach {
+                options.encoding = 'UTF-8'
+                options.compilerArgs += ['-parameters']
+            }
+
+            test {
+                useJUnitPlatform()
+                testLogging {
+                    events "passed", "skipped", "failed"
+                    exceptionFormat "full"
+                }
+            }
+        }
+    }
+}

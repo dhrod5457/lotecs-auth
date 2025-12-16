@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.token.mapper.RefreshTokenMapper">
+
+    <!-- RefreshToken ResultMap -->
+    <resultMap id="refreshTokenResultMap" type="lotecs.auth.domain.token.model.RefreshToken">
+        <id property="tokenId" column="TOKEN_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="token" column="TOKEN"/>
+        <result property="expiresAt" column="EXPIRES_AT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+    </resultMap>
+
+    <!-- 토큰으로 조회 -->
+    <select id="findByToken" resultMap="refreshTokenResultMap">
+        SELECT
+            TOKEN_ID,
+            USER_ID,
+            TOKEN,
+            EXPIRES_AT,
+            CREATED_AT
+        FROM AUTH_REFRESH_TOKENS
+        WHERE TOKEN = #{token}
+    </select>
+
+    <!-- 사용자 ID로 토큰 조회 -->
+    <select id="findByUserId" resultMap="refreshTokenResultMap">
+        SELECT
+            TOKEN_ID,
+            USER_ID,
+            TOKEN,
+            EXPIRES_AT,
+            CREATED_AT
+        FROM AUTH_REFRESH_TOKENS
+        WHERE USER_ID = #{userId}
+    </select>
+
+    <!-- 토큰 등록 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.token.model.RefreshToken">
+        <selectKey keyProperty="tokenId" resultType="long" order="BEFORE">
+            SELECT AUTH_REFRESH_TOKENS_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO AUTH_REFRESH_TOKENS (
+            TOKEN_ID,
+            USER_ID,
+            TOKEN,
+            EXPIRES_AT,
+            CREATED_AT
+        ) VALUES (
+            #{tokenId},
+            #{userId},
+            #{token},
+            #{expiresAt},
+            #{createdAt}
+        )
+    </insert>
+
+    <!-- 사용자 ID로 토큰 삭제 -->
+    <delete id="deleteByUserId">
+        DELETE FROM AUTH_REFRESH_TOKENS
+        WHERE USER_ID = #{userId}
+    </delete>
+
+    <!-- 토큰으로 삭제 -->
+    <delete id="deleteByToken">
+        DELETE FROM AUTH_REFRESH_TOKENS
+        WHERE TOKEN = #{token}
+    </delete>
+
+    <!-- 만료된 토큰 삭제 -->
+    <delete id="deleteExpiredTokens">
+        DELETE FROM AUTH_REFRESH_TOKENS
+        WHERE EXPIRES_AT &lt; SYSTIMESTAMP
+    </delete>
+
+</mapper>
