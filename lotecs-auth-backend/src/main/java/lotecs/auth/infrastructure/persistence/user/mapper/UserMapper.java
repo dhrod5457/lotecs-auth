@@ -13,7 +13,7 @@ public interface UserMapper {
     /**
      * ID로 사용자 조회
      */
-    Optional<User> findById(@Param("userId") Long userId);
+    Optional<User> findById(@Param("userId") String userId);
 
     /**
      * 사용자명과 테넌트 ID로 사용자 조회
@@ -43,5 +43,5 @@ public interface UserMapper {
     /**
      * 사용자 삭제
      */
-    void delete(@Param("userId") Long userId);
+    void delete(@Param("userId") String userId);
 }

@@ -30,6 +30,7 @@ dependencies {
     implementation 'lotecs.framework:lotecs-core:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-jwt-core:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-jwt-web:1.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:lotecs-jwt-redis:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-cache-spring-boot-starter:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-crypto-spring-boot-starter:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-logging-spring-boot-starter:1.0.0-SNAPSHOT'
@@ -59,11 +60,6 @@ dependencies {
     // Database
     runtimeOnly 'com.oracle.database.jdbc:ojdbc8:23.3.0.23.09'
     testRuntimeOnly 'com.h2database:h2:2.2.224'
-
-    // JWT
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
     // Keycloak Admin Client (for SSO)
     implementation 'org.keycloak:keycloak-admin-client:23.0.3'

@@ -195,6 +195,12 @@ lotecs:
     issuer: "lotecs-platform"
     audience: "lotecs-services"
     clock-skew-seconds: 30
+    blacklist:
+      enabled: true
+      storage: redis
+      redis:
+        key-prefix: "lotecs:jwt:blacklist:"
+        ttl-buffer-seconds: 300
     web:
       enabled: true
       filter:

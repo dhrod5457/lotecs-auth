@@ -1,4 +1,4 @@
-package lotecs.auth.presentation.controller.admin.sso;
+package lotecs.auth.presentation.sso;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

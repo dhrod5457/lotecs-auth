@@ -39,8 +39,9 @@ message LoginResponse {
 }
 
 message LogoutRequest {
-  string user_id = 1;
-  string tenant_id = 2;
+  string access_token = 1;
+  string user_id = 2;
+  string tenant_id = 3;
 }
 
 message LogoutResponse {

@@ -1,4 +1,4 @@
-package lotecs.auth.application.token.dto;
+package lotecs.auth.application.auth.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

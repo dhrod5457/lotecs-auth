@@ -18,13 +18,13 @@ public class UserRepositoryImpl implements UserRepository {
     private final UserMapper userMapper;
 
     @Override
-    public Optional<User> findById(Long userId) {
+    public Optional<User> findById(String userId) {
         log.debug("Finding user by id: {}", userId);
         return userMapper.findById(userId);
     }
 
     @Override
-    public Optional<User> findByIdAndTenantId(Long userId, String tenantId) {
+    public Optional<User> findByIdAndTenantId(String userId, String tenantId) {
         log.debug("Finding user by id and tenantId: userId={}, tenantId={}", userId, tenantId);
         return userMapper.findById(userId)
                 .filter(user -> tenantId.equals(user.getTenantId()));
@@ -56,7 +56,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void delete(Long userId) {
+    public void delete(String userId) {
         log.debug("Deleting user: userId={}", userId);
         userMapper.delete(userId);
     }

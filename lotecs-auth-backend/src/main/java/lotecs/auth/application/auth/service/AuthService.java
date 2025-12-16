@@ -4,9 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lotecs.auth.application.auth.dto.LoginRequest;
 import lotecs.auth.application.auth.dto.LoginResponse;
-import lotecs.auth.application.token.dto.TokenRefreshResult;
-import lotecs.auth.application.token.dto.ValidateTokenResponse;
-import lotecs.auth.application.token.service.TokenService;
+import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.user.mapper.UserDtoMapper;
 import lotecs.auth.application.user.service.UserSyncService;
 import lotecs.auth.domain.sso.SsoAuthRequest;
@@ -15,12 +13,22 @@ import lotecs.auth.domain.sso.SsoProvider;
 import lotecs.auth.domain.sso.SsoType;
 import lotecs.auth.domain.sso.model.TenantSsoConfig;
 import lotecs.auth.domain.sso.repository.TenantSsoConfigRepository;
+import lotecs.auth.domain.user.model.Role;
 import lotecs.auth.domain.user.model.User;
+import lotecs.auth.domain.user.model.UserStatus;
 import lotecs.auth.domain.user.repository.UserRepository;
 import lotecs.auth.infrastructure.sso.SsoProviderFactory;
+import lotecs.framework.common.jwt.model.JwtResult;
+import lotecs.framework.common.jwt.model.JwtTokenResponse;
+import lotecs.framework.common.jwt.service.facade.JwtAuthenticationService;
+import lotecs.framework.common.jwt.service.facade.JwtRefreshService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,7 +38,8 @@ public class AuthService {
     private final TenantSsoConfigRepository ssoConfigRepository;
     private final SsoProviderFactory ssoProviderFactory;
     private final UserSyncService userSyncService;
-    private final TokenService tokenService;
+    private final JwtAuthenticationService jwtAuthenticationService;
+    private final JwtRefreshService jwtRefreshService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserDtoMapper userDtoMapper;
@@ -75,24 +84,46 @@ public class AuthService {
         }
 
         // 3. 로그인 정보 업데이트
-        user.updateLoginInfo(request.getIpAddress());
+        user.recordLoginSuccess(request.getIpAddress());
         userRepository.save(user);
 
-        // 4. JWT 발급 (TokenService 사용)
-        String accessToken = tokenService.generateAccessToken(user);
-        String refreshToken = tokenService.generateRefreshToken(user);
+        // 4. JWT 발급 (lotecs-jwt 사용)
+        String roles = user.getRoles().stream()
+                .map(Role::getRoleName)
+                .collect(Collectors.joining(","));
+
+        Map<String, Object> customClaims = buildUserClaims(user);
+        JwtTokenResponse tokenResponse = jwtAuthenticationService.loginWithClaims(
+                user.getUsername(),
+                roles,
+                customClaims
+        );
 
         log.info("[AUTH-001] 로그인 성공: userId={}, tenant={}, ssoType={}, ip={}",
                 user.getUserId(), user.getTenantId(), ssoConfig.getSsoType(), request.getIpAddress());
 
         // 5. LoginResponse 반환
         return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .expiresIn(900L) // 15분 (초 단위)
+                .accessToken(tokenResponse.getAccessToken())
+                .refreshToken(tokenResponse.getRefreshToken())
+                .expiresIn(tokenResponse.getExpiresIn())
                 .user(userDtoMapper.toDto(user))
                 .ssoType(ssoConfig.getSsoType())
                 .build();
+    }
+
+    /**
+     * User 객체에서 JWT 커스텀 클레임 생성
+     */
+    private Map<String, Object> buildUserClaims(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getUserId());
+        claims.put("tenantId", user.getTenantId());
+        claims.put("username", user.getUsername());
+        if (user.getEmail() != null) {
+            claims.put("email", user.getEmail());
+        }
+        return claims;
     }
 
     /**
@@ -117,7 +148,7 @@ public class AuthService {
         // 비밀번호 검증
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             log.warn("[AUTH] 비밀번호 불일치: username={}", request.getUsername());
-            user.incrementFailedAttempts();
+            user.recordLoginFailure();
             userRepository.save(user);
             throw new IllegalArgumentException("Invalid credentials");
         }
@@ -181,17 +212,17 @@ public class AuthService {
      * @param user 사용자
      */
     private void validateUserStatus(User user) {
-        if (!user.getAccountNonLocked()) {
+        if (!user.isAccountNonLocked()) {
             log.warn("[AUTH] 계정 잠김: userId={}, username={}", user.getUserId(), user.getUsername());
             throw new IllegalArgumentException("Account is locked");
         }
 
-        if (!user.getEnabled()) {
+        if (!user.isEnabled()) {
             log.warn("[AUTH] 계정 비활성화: userId={}, username={}", user.getUserId(), user.getUsername());
             throw new IllegalArgumentException("Account is disabled");
         }
 
-        if ("DELETED".equals(user.getStatus()) || "SUSPENDED".equals(user.getStatus())) {
+        if (user.getStatus() == UserStatus.SUSPENDED || user.getStatus() == UserStatus.LOCKED) {
             log.warn("[AUTH] 계정 상태 이상: userId={}, status={}", user.getUserId(), user.getStatus());
             throw new IllegalArgumentException("Account is not active");
         }
@@ -218,14 +249,15 @@ public class AuthService {
     /**
      * 로그아웃 처리
      *
+     * @param accessToken Access Token
      * @param userId 사용자 ID
      */
     @Transactional
-    public void logout(Long userId) {
+    public void logout(String accessToken, String userId) {
         log.info("[AUTH-007] 로그아웃: userId={}", userId);
 
-        // Refresh Token 삭제 (TokenService에 위임하지 않고 직접 삭제 필요시)
-        // refreshTokenRepository.deleteByUserId(userId);
+        // JWT 블랙리스트에 추가
+        jwtAuthenticationService.logout(accessToken, userId);
 
         log.info("[AUTH-008] 로그아웃 완료: userId={}", userId);
     }
@@ -240,18 +272,36 @@ public class AuthService {
     public LoginResponse refresh(String refreshToken) {
         log.info("[AUTH-009] 토큰 갱신 시도");
 
-        TokenRefreshResult result = tokenService.refreshToken(refreshToken);
+        JwtTokenResponse tokenResponse = jwtRefreshService.refreshToken(refreshToken);
 
-        // User 조회
-        User user = tokenService.validateAccessToken(result.getAccessToken());
+        // 토큰에서 사용자 정보 추출
+        JwtResult jwtResult = jwtAuthenticationService.validateToken(tokenResponse.getAccessToken());
 
-        log.info("[AUTH-010] 토큰 갱신 성공: userId={}", user.getUserId());
+        if (!jwtResult.isSuccess()) {
+            log.error("[AUTH] 토큰 갱신 후 검증 실패: {}", jwtResult.getErrorMessage());
+            throw new IllegalArgumentException("Token refresh failed");
+        }
+
+        // User 조회 (클레임에서 userId 추출)
+        String userId = jwtResult.getClaims() != null
+                ? (String) jwtResult.getClaims().get("userId")
+                : null;
+        String tenantId = jwtResult.getClaims() != null
+                ? (String) jwtResult.getClaims().get("tenantId")
+                : null;
+
+        User user = null;
+        if (userId != null && tenantId != null) {
+            user = userRepository.findByIdAndTenantId(userId, tenantId).orElse(null);
+        }
+
+        log.info("[AUTH-010] 토큰 갱신 성공: userId={}", userId);
 
         return LoginResponse.builder()
-                .accessToken(result.getAccessToken())
-                .refreshToken(result.getRefreshToken())
-                .expiresIn(result.getExpiresIn())
-                .user(userDtoMapper.toDto(user))
+                .accessToken(tokenResponse.getAccessToken())
+                .refreshToken(tokenResponse.getRefreshToken())
+                .expiresIn(tokenResponse.getExpiresIn())
+                .user(user != null ? userDtoMapper.toDto(user) : null)
                 .build();
     }
 
@@ -265,23 +315,35 @@ public class AuthService {
     public ValidateTokenResponse validate(String accessToken) {
         log.debug("[AUTH-011] 토큰 검증 시도");
 
-        try {
-            User user = tokenService.validateAccessToken(accessToken);
+        JwtResult jwtResult = jwtAuthenticationService.validateToken(accessToken);
 
-            log.debug("[AUTH-012] 토큰 검증 성공: userId={}", user.getUserId());
-
-            return ValidateTokenResponse.builder()
-                    .valid(true)
-                    .user(userDtoMapper.toDto(user))
-                    .build();
-
-        } catch (Exception e) {
-            log.warn("[AUTH-013] 토큰 검증 실패: {}", e.getMessage());
+        if (!jwtResult.isSuccess()) {
+            log.warn("[AUTH-013] 토큰 검증 실패: {}", jwtResult.getErrorMessage());
 
             return ValidateTokenResponse.builder()
                     .valid(false)
-                    .errorMessage(e.getMessage())
+                    .errorMessage(jwtResult.getErrorMessage())
                     .build();
         }
+
+        // 클레임에서 사용자 정보 추출
+        String userId = jwtResult.getClaims() != null
+                ? (String) jwtResult.getClaims().get("userId")
+                : null;
+        String tenantId = jwtResult.getClaims() != null
+                ? (String) jwtResult.getClaims().get("tenantId")
+                : null;
+
+        User user = null;
+        if (userId != null && tenantId != null) {
+            user = userRepository.findByIdAndTenantId(userId, tenantId).orElse(null);
+        }
+
+        log.debug("[AUTH-012] 토큰 검증 성공: userId={}", userId);
+
+        return ValidateTokenResponse.builder()
+                .valid(true)
+                .user(user != null ? userDtoMapper.toDto(user) : null)
+                .build();
     }
 }

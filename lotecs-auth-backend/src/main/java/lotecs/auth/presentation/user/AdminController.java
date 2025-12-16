@@ -1,4 +1,4 @@
-package lotecs.auth.presentation.controller.admin.user;
+package lotecs.auth.presentation.user;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class AdminController {
      */
     @GetMapping("/users/{userId}")
     public CommonResponse<UserDto> getUser(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam String tenantId) {
 
         UserDto user = userService.getUserById(userId, tenantId);
@@ -46,7 +46,7 @@ public class AdminController {
      */
     @PutMapping("/users/{userId}")
     public CommonResponse<UserDto> updateUser(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam String tenantId,
             @Valid @RequestBody UpdateUserRequest request) {
 
@@ -59,7 +59,7 @@ public class AdminController {
      */
     @DeleteMapping("/users/{userId}")
     public CommonResponse<Void> deleteUser(
-            @PathVariable Long userId,
+            @PathVariable String userId,
             @RequestParam String tenantId) {
 
         userService.deleteUser(userId, tenantId);

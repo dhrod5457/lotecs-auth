@@ -1,15 +1,14 @@
 package lotecs.auth.application.auth.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class LogoutRequest {
 
-    @NotNull(message = "userId is required")
-    private Long userId;
+    @NotBlank(message = "accessToken is required")
+    private String accessToken;
 
-    @NotBlank(message = "tenantId is required")
-    private String tenantId;
+    @NotBlank(message = "userId is required")
+    private String userId;
 }

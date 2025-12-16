@@ -20,8 +20,8 @@ public class ExternalUserMapping {
     @NotBlank
     private String tenantId;
 
-    @NotNull
-    private Long userId;
+    @NotBlank
+    private String userId;
 
     @NotBlank
     private String externalUserId;

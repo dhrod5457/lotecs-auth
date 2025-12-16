@@ -8,6 +8,7 @@ import lotecs.auth.application.user.dto.UserDto;
 import lotecs.auth.application.user.mapper.UserDtoMapper;
 import lotecs.auth.domain.user.model.Role;
 import lotecs.auth.domain.user.model.User;
+import lotecs.auth.domain.user.model.UserStatus;
 import lotecs.auth.domain.user.repository.RoleRepository;
 import lotecs.auth.domain.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,7 +51,7 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .fullName(request.getFullName())
-                .status("ACTIVE")
+                .status(UserStatus.ACTIVE)
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
                 .enabled(true)
@@ -78,7 +79,7 @@ public class UserService {
      * 사용자 조회 (ID)
      */
     @Transactional(readOnly = true)
-    public UserDto getUserById(Long userId, String tenantId) {
+    public UserDto getUserById(String userId, String tenantId) {
         log.debug("[USER-004] 사용자 조회: userId={}, tenant={}", userId, tenantId);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
@@ -123,7 +124,7 @@ public class UserService {
      * 사용자 수정
      */
     @Transactional
-    public UserDto updateUser(Long userId, String tenantId, UpdateUserRequest request) {
+    public UserDto updateUser(String userId, String tenantId, UpdateUserRequest request) {
         log.info("[USER-009] 사용자 수정: userId={}, tenant={}", userId, tenantId);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
@@ -140,7 +141,7 @@ public class UserService {
             user.setFullName(request.getFullName());
         }
         if (request.getStatus() != null) {
-            user.setStatus(request.getStatus());
+            user.setStatus(UserStatus.valueOf(request.getStatus()));
         }
 
         user.setUpdatedAt(LocalDateTime.now());
@@ -155,7 +156,7 @@ public class UserService {
      * 사용자 삭제
      */
     @Transactional
-    public void deleteUser(Long userId, String tenantId) {
+    public void deleteUser(String userId, String tenantId) {
         log.info("[USER-012] 사용자 삭제: userId={}, tenant={}", userId, tenantId);
 
         userRepository.findByIdAndTenantId(userId, tenantId)

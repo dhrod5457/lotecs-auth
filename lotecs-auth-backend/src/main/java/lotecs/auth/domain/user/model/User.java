@@ -1,112 +1,121 @@
 package lotecs.auth.domain.user.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
 
-    private Long userId;
-
-    @NotBlank
+    private String userId;
     private String tenantId;
-
-    @NotBlank
     private String username;
-
-    @NotBlank
     private String password;
-
     private String email;
 
     private String phoneNumber;
-
     private String fullName;
 
-    @NotBlank
-    private String status;
-
-    @NotNull
-    @Builder.Default
-    private Boolean accountNonLocked = true;
-
-    @NotNull
-    @Builder.Default
-    private Boolean credentialsNonExpired = true;
-
-    @NotNull
-    @Builder.Default
-    private Boolean enabled = true;
+    private UserStatus status;
+    private boolean accountNonLocked;
+    private boolean credentialsNonExpired;
+    private boolean enabled;
 
     private LocalDateTime lastLoginAt;
-
     private String lastLoginIp;
-
-    @NotNull
-    @Builder.Default
-    private Integer failedLoginAttempts = 0;
-
+    private int failedLoginAttempts;
     private LocalDateTime lockedAt;
-
     private LocalDateTime passwordChangedAt;
 
     private String createdBy;
-
     private LocalDateTime createdAt;
-
     private String updatedBy;
-
     private LocalDateTime updatedAt;
 
     @Builder.Default
     private List<Role> roles = new ArrayList<>();
 
-    /**
-     * 로그인 정보 업데이트
-     */
-    public void updateLoginInfo(String ipAddress) {
+    private static final int MAX_FAILED_ATTEMPTS = 5;
+    private static final int PASSWORD_EXPIRY_DAYS = 90;
+
+    public void recordLoginSuccess(String ipAddress) {
         this.lastLoginAt = LocalDateTime.now();
         this.lastLoginIp = ipAddress;
         this.failedLoginAttempts = 0;
-    }
-
-    /**
-     * 로그인 실패 시도 증가
-     */
-    public void incrementFailedAttempts() {
-        this.failedLoginAttempts++;
-        if (this.failedLoginAttempts >= 5) {
-            lock();
+        if (this.accountNonLocked == false) {
+            this.accountNonLocked = true;
+            this.lockedAt = null;
         }
     }
 
-    /**
-     * 계정 잠금
-     */
-    public void lock() {
+    public void recordLoginFailure() {
+        this.failedLoginAttempts++;
+        if (this.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+            this.accountNonLocked = false;
+            this.lockedAt = LocalDateTime.now();
+        }
+    }
+
+    public void recordLogout() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public boolean isPasswordExpired() {
+        if (passwordChangedAt == null) {
+            return false;
+        }
+        return LocalDateTime.now().isAfter(passwordChangedAt.plusDays(PASSWORD_EXPIRY_DAYS));
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+        this.passwordChangedAt = LocalDateTime.now();
+        this.credentialsNonExpired = true;
+    }
+
+    public void lock(String reason) {
         this.accountNonLocked = false;
         this.lockedAt = LocalDateTime.now();
     }
 
-    /**
-     * 계정 잠금 해제
-     */
     public void unlock() {
         this.accountNonLocked = true;
         this.failedLoginAttempts = 0;
         this.lockedAt = null;
+    }
+
+    public void suspend(String reason) {
+        this.status = UserStatus.SUSPENDED;
+    }
+
+    public void activate() {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    public void validate() {
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("사용자명은 필수입니다.");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("비밀번호는 필수입니다.");
+        }
+        if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new IllegalArgumentException("유효한 이메일 주소를 입력해주세요.");
+        }
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            throw new IllegalArgumentException("테넌트 ID는 필수입니다.");
+        }
     }
 
     /**
@@ -114,12 +123,13 @@ public class User {
      */
     public static User createFromExternal(String tenantId, String username, String email, String fullName) {
         return User.builder()
+                .userId(UUID.randomUUID().toString())
                 .tenantId(tenantId)
                 .username(username)
                 .password(UUID.randomUUID().toString())
                 .email(email)
                 .fullName(fullName)
-                .status("ACTIVE")
+                .status(UserStatus.ACTIVE)
                 .accountNonLocked(true)
                 .credentialsNonExpired(true)
                 .enabled(true)
@@ -144,4 +154,5 @@ public class User {
         this.roles.clear();
         this.roles.addAll(roles);
     }
+
 }

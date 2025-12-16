@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lotecs.auth.application.auth.dto.LoginRequest;
 import lotecs.auth.application.auth.dto.LoginResponse;
+import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.auth.service.AuthService;
-import lotecs.auth.application.token.dto.ValidateTokenResponse;
 import lotecs.auth.application.user.dto.CreateUserRequest;
 import lotecs.auth.application.user.dto.UpdateUserRequest;
 import lotecs.auth.application.user.dto.UserDto;
@@ -72,7 +72,7 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
         try {
             // 로그아웃 처리
-            authService.logout(Long.parseLong(request.getUserId()));
+            authService.logout(request.getAccessToken(), request.getUserId());
 
             // gRPC 응답 생성
             com.lotecs.auth.grpc.LogoutResponse grpcResponse = com.lotecs.auth.grpc.LogoutResponse.newBuilder()
@@ -162,7 +162,7 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
         log.debug("[gRPC] getUserById 호출: userId={}", request.getUserId());
 
         try {
-            UserDto user = userService.getUserById(Long.parseLong(request.getUserId()), request.getTenantId());
+            UserDto user = userService.getUserById(request.getUserId(), request.getTenantId());
 
             com.lotecs.auth.grpc.UserResponse grpcResponse = com.lotecs.auth.grpc.UserResponse.newBuilder()
                     .setUser(toUserInfo(user))
@@ -291,7 +291,7 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
             // 사용자 수정
             UserDto user = userService.updateUser(
-                    Long.parseLong(request.getUserId()),
+                    request.getUserId(),
                     request.getTenantId(),
                     updateRequest
             );
@@ -319,7 +319,7 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
         log.info("[gRPC] deleteUser 호출: userId={}", request.getUserId());
 
         try {
-            userService.deleteUser(Long.parseLong(request.getUserId()), request.getTenantId());
+            userService.deleteUser(request.getUserId(), request.getTenantId());
 
             com.lotecs.auth.grpc.DeleteUserResponse grpcResponse = com.lotecs.auth.grpc.DeleteUserResponse.newBuilder()
                     .setSuccess(true)

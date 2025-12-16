@@ -1,4 +1,4 @@
-package lotecs.auth.presentation.controller.auth;
+package lotecs.auth.presentation.auth;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import lotecs.auth.application.auth.dto.LoginRequest;
 import lotecs.auth.application.auth.dto.LoginResponse;
 import lotecs.auth.application.auth.dto.LogoutRequest;
+import lotecs.auth.application.auth.dto.ValidateTokenRequest;
+import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.auth.service.AuthService;
-import lotecs.auth.application.token.dto.ValidateTokenRequest;
-import lotecs.auth.application.token.dto.ValidateTokenResponse;
 import lotecs.framework.web.dto.CommonResponse;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +44,7 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public CommonResponse<Void> logout(@Valid @RequestBody LogoutRequest request) {
-        authService.logout(request.getUserId());
+        authService.logout(request.getAccessToken(), request.getUserId());
         return CommonResponse.success();
     }
 
