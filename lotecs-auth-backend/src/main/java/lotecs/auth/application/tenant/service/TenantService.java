@@ -180,4 +180,89 @@ public class TenantService {
 
         log.info("[TENANT-015] 테넌트 삭제 완료: tenantId={}", tenantId);
     }
+
+    @Transactional
+    public TenantDto publishTenant(String tenantId, String publishedBy) {
+        log.info("[TENANT-016] 테넌트 게시: tenantId={}", tenantId);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> {
+                    log.warn("[TENANT-017] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
+                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                });
+
+        tenant.publish(publishedBy);
+        tenant = tenantRepository.save(tenant);
+
+        log.info("[TENANT-018] 테넌트 게시 완료: tenantId={}, status={}", tenantId, tenant.getStatus());
+        return tenantDtoMapper.toDto(tenant);
+    }
+
+    @Transactional
+    public TenantDto unpublishTenant(String tenantId, String unpublishedBy, String reason) {
+        log.info("[TENANT-019] 테넌트 게시 중단: tenantId={}, reason={}", tenantId, reason);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> {
+                    log.warn("[TENANT-020] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
+                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                });
+
+        tenant.unpublish(unpublishedBy, reason);
+        tenant = tenantRepository.save(tenant);
+
+        log.info("[TENANT-021] 테넌트 게시 중단 완료: tenantId={}, status={}", tenantId, tenant.getStatus());
+        return tenantDtoMapper.toDto(tenant);
+    }
+
+    @Transactional
+    public TenantDto suspendTenant(String tenantId, String suspendedBy, String reason) {
+        log.info("[TENANT-022] 테넌트 일시중지: tenantId={}, reason={}", tenantId, reason);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> {
+                    log.warn("[TENANT-023] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
+                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                });
+
+        tenant.suspend(suspendedBy, reason);
+        tenant = tenantRepository.save(tenant);
+
+        log.info("[TENANT-024] 테넌트 일시중지 완료: tenantId={}, status={}", tenantId, tenant.getStatus());
+        return tenantDtoMapper.toDto(tenant);
+    }
+
+    @Transactional
+    public TenantDto resumeTenant(String tenantId, String resumedBy) {
+        log.info("[TENANT-025] 테넌트 재개: tenantId={}", tenantId);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> {
+                    log.warn("[TENANT-026] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
+                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                });
+
+        tenant.resume(resumedBy);
+        tenant = tenantRepository.save(tenant);
+
+        log.info("[TENANT-027] 테넌트 재개 완료: tenantId={}, status={}", tenantId, tenant.getStatus());
+        return tenantDtoMapper.toDto(tenant);
+    }
+
+    @Transactional
+    public TenantDto archiveTenant(String tenantId, String archivedBy) {
+        log.info("[TENANT-028] 테넌트 보관: tenantId={}", tenantId);
+
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> {
+                    log.warn("[TENANT-029] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
+                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                });
+
+        tenant.archive(archivedBy);
+        tenant = tenantRepository.save(tenant);
+
+        log.info("[TENANT-030] 테넌트 보관 완료: tenantId={}, status={}", tenantId, tenant.getStatus());
+        return tenantDtoMapper.toDto(tenant);
+    }
 }

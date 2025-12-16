@@ -30,6 +30,7 @@ dependencies {
     // LOTECS Dependencies BOM (버전 통합 관리)
     implementation platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
     annotationProcessor platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
+    testAnnotationProcessor platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
 
     // LOTECS Framework - 버전은 BOM에서 관리
     implementation 'lotecs.framework:lotecs-core'

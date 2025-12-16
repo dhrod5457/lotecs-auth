@@ -224,17 +224,25 @@ public class TenantGrpcServiceImpl extends TenantServiceGrpc.TenantServiceImplBa
         log.info("[gRPC] publishTenant 호출: tenantId={}", request.getTenantId());
 
         try {
-            // TODO: TenantService에 publish 메서드 추가 필요
-            TenantDto tenant = tenantService.getTenant(request.getTenantId());
+            TenantDto tenant = tenantService.publishTenant(request.getTenantId(), request.getUpdatedBy());
 
             TenantResponse response = TenantResponse.newBuilder()
                     .setTenant(toTenantInfo(tenant))
-                    .setErrorMessage("Publish not implemented yet")
                     .build();
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
+        } catch (IllegalStateException e) {
+            log.warn("[gRPC] publishTenant 상태 오류: {}", e.getMessage());
+            responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        } catch (IllegalArgumentException e) {
+            log.warn("[gRPC] publishTenant 요청 오류: {}", e.getMessage());
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
         } catch (Exception e) {
             log.error("[gRPC] publishTenant 실패: {}", e.getMessage(), e);
             responseObserver.onError(io.grpc.Status.INTERNAL
@@ -248,17 +256,29 @@ public class TenantGrpcServiceImpl extends TenantServiceGrpc.TenantServiceImplBa
         log.info("[gRPC] unpublishTenant 호출: tenantId={}", request.getTenantId());
 
         try {
-            // TODO: TenantService에 unpublish 메서드 추가 필요
-            TenantDto tenant = tenantService.getTenant(request.getTenantId());
+            TenantDto tenant = tenantService.unpublishTenant(
+                    request.getTenantId(),
+                    request.getUpdatedBy(),
+                    request.getReason()
+            );
 
             TenantResponse response = TenantResponse.newBuilder()
                     .setTenant(toTenantInfo(tenant))
-                    .setErrorMessage("Unpublish not implemented yet")
                     .build();
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
+        } catch (IllegalStateException e) {
+            log.warn("[gRPC] unpublishTenant 상태 오류: {}", e.getMessage());
+            responseObserver.onError(io.grpc.Status.FAILED_PRECONDITION
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        } catch (IllegalArgumentException e) {
+            log.warn("[gRPC] unpublishTenant 요청 오류: {}", e.getMessage());
+            responseObserver.onError(io.grpc.Status.NOT_FOUND
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
         } catch (Exception e) {
             log.error("[gRPC] unpublishTenant 실패: {}", e.getMessage(), e);
             responseObserver.onError(io.grpc.Status.INTERNAL

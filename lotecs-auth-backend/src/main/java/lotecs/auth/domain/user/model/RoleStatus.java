@@ -15,6 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class RoleStatus {
 
+    private Long id;
     private String statusCode;
     private String statusName;
     private String roleCategory;

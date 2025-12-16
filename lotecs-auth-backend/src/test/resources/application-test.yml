@@ -8,6 +8,11 @@ spring:
     username: sa
     password:
 
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
   h2:
     console:
       enabled: false
