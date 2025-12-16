@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.organization.mapper.UserOrganizationMapper">
+
+    <resultMap id="userOrganizationResultMap" type="lotecs.auth.domain.organization.model.UserOrganization">
+        <id property="id" column="ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="userId" column="USER_ID"/>
+        <result property="organizationId" column="ORGANIZATION_ID"/>
+        <result property="roleId" column="ROLE_ID"/>
+        <result property="isPrimary" column="IS_PRIMARY" typeHandler="lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler"/>
+        <result property="position" column="POSITION"/>
+        <result property="startDate" column="START_DATE"/>
+        <result property="endDate" column="END_DATE"/>
+        <result property="active" column="ACTIVE" typeHandler="lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedBy" column="UPDATED_BY"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <sql id="userOrganizationColumns">
+        ID, TENANT_ID, USER_ID, ORGANIZATION_ID, ROLE_ID, IS_PRIMARY, POSITION,
+        START_DATE, END_DATE, ACTIVE, CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT
+    </sql>
+
+    <select id="findById" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE ID = #{id}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findByUserId" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE USER_ID = #{userId}
+          AND DELETED_AT IS NULL
+        ORDER BY IS_PRIMARY DESC, START_DATE DESC
+    </select>
+
+    <select id="findActiveByUserId" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE USER_ID = #{userId}
+          AND ACTIVE = '1'
+          AND (END_DATE IS NULL OR END_DATE >= TRUNC(SYSDATE))
+          AND DELETED_AT IS NULL
+        ORDER BY IS_PRIMARY DESC, START_DATE DESC
+    </select>
+
+    <select id="findPrimaryByUserId" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE USER_ID = #{userId}
+          AND IS_PRIMARY = '1'
+          AND ACTIVE = '1'
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findByOrganizationId" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE ORGANIZATION_ID = #{organizationId}
+          AND DELETED_AT IS NULL
+        ORDER BY IS_PRIMARY DESC, START_DATE DESC
+    </select>
+
+    <select id="findActiveByOrganizationId" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE ORGANIZATION_ID = #{organizationId}
+          AND ACTIVE = '1'
+          AND (END_DATE IS NULL OR END_DATE >= TRUNC(SYSDATE))
+          AND DELETED_AT IS NULL
+        ORDER BY IS_PRIMARY DESC, START_DATE DESC
+    </select>
+
+    <select id="findByTenantId" resultMap="userOrganizationResultMap">
+        SELECT <include refid="userOrganizationColumns"/>
+        FROM ATH_USER_ORGANIZATION
+        WHERE TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
+        ORDER BY USER_ID, IS_PRIMARY DESC
+    </select>
+
+    <insert id="insert" parameterType="lotecs.auth.domain.organization.model.UserOrganization">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT ATH_USER_ORGANIZATION_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO ATH_USER_ORGANIZATION (
+            ID, TENANT_ID, USER_ID, ORGANIZATION_ID, ROLE_ID, IS_PRIMARY, POSITION,
+            START_DATE, END_DATE, ACTIVE, CREATED_BY, CREATED_AT
+        ) VALUES (
+            #{id}, #{tenantId}, #{userId}, #{organizationId}, #{roleId}, #{isPrimary,typeHandler=lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler}, #{position},
+            #{startDate}, #{endDate}, #{active,typeHandler=lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler}, #{createdBy}, #{createdAt}
+        )
+    </insert>
+
+    <update id="update" parameterType="lotecs.auth.domain.organization.model.UserOrganization">
+        UPDATE ATH_USER_ORGANIZATION
+        SET ROLE_ID = #{roleId},
+            IS_PRIMARY = #{isPrimary,typeHandler=lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler},
+            POSITION = #{position},
+            START_DATE = #{startDate},
+            END_DATE = #{endDate},
+            ACTIVE = #{active,typeHandler=lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler},
+            UPDATED_BY = #{updatedBy},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+          AND DELETED_AT IS NULL
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ATH_USER_ORGANIZATION
+        WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteByUserId">
+        DELETE FROM ATH_USER_ORGANIZATION
+        WHERE USER_ID = #{userId}
+    </delete>
+
+    <delete id="deleteByOrganizationId">
+        DELETE FROM ATH_USER_ORGANIZATION
+        WHERE ORGANIZATION_ID = #{organizationId}
+    </delete>
+
+</mapper>

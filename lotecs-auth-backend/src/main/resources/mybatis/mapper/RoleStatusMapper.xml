@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.user.mapper.RoleStatusMapper">
+
+    <resultMap id="roleStatusResultMap" type="lotecs.auth.domain.user.model.RoleStatus">
+        <id property="statusCode" column="STATUS_CODE"/>
+        <result property="statusName" column="STATUS_NAME"/>
+        <result property="roleCategory" column="ROLE_CATEGORY"/>
+        <result property="isActive" column="IS_ACTIVE"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="sortOrder" column="SORT_ORDER"/>
+        <result property="isDefault" column="IS_DEFAULT"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedBy" column="UPDATED_BY"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <sql id="roleStatusColumns">
+        STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION,
+        SORT_ORDER, IS_DEFAULT, CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT
+    </sql>
+
+    <select id="findByStatusCode" resultMap="roleStatusResultMap">
+        SELECT <include refid="roleStatusColumns"/>
+        FROM ATH_ROLE_STATUS
+        WHERE STATUS_CODE = #{statusCode}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findAll" resultMap="roleStatusResultMap">
+        SELECT <include refid="roleStatusColumns"/>
+        FROM ATH_ROLE_STATUS
+        WHERE DELETED_AT IS NULL
+        ORDER BY ROLE_CATEGORY ASC, SORT_ORDER ASC
+    </select>
+
+    <select id="findActive" resultMap="roleStatusResultMap">
+        SELECT <include refid="roleStatusColumns"/>
+        FROM ATH_ROLE_STATUS
+        WHERE IS_ACTIVE = 1
+          AND DELETED_AT IS NULL
+        ORDER BY ROLE_CATEGORY ASC, SORT_ORDER ASC
+    </select>
+
+    <select id="findByRoleCategory" resultMap="roleStatusResultMap">
+        SELECT <include refid="roleStatusColumns"/>
+        FROM ATH_ROLE_STATUS
+        WHERE ROLE_CATEGORY = #{roleCategory}
+          AND DELETED_AT IS NULL
+        ORDER BY SORT_ORDER ASC
+    </select>
+
+    <select id="findDefaultByRoleCategory" resultMap="roleStatusResultMap">
+        SELECT <include refid="roleStatusColumns"/>
+        FROM ATH_ROLE_STATUS
+        WHERE ROLE_CATEGORY = #{roleCategory}
+          AND IS_DEFAULT = 1
+          AND DELETED_AT IS NULL
+    </select>
+
+    <insert id="insert" parameterType="lotecs.auth.domain.user.model.RoleStatus">
+        INSERT INTO ATH_ROLE_STATUS (
+            STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION,
+            SORT_ORDER, IS_DEFAULT, CREATED_BY, CREATED_AT
+        ) VALUES (
+            #{statusCode}, #{statusName}, #{roleCategory},
+            #{isActive, jdbcType=NUMERIC, typeHandler=org.apache.ibatis.type.BooleanTypeHandler},
+            #{description}, #{sortOrder},
+            #{isDefault, jdbcType=NUMERIC, typeHandler=org.apache.ibatis.type.BooleanTypeHandler},
+            #{createdBy}, #{createdAt}
+        )
+    </insert>
+
+    <update id="update" parameterType="lotecs.auth.domain.user.model.RoleStatus">
+        UPDATE ATH_ROLE_STATUS
+        SET STATUS_NAME = #{statusName},
+            ROLE_CATEGORY = #{roleCategory},
+            IS_ACTIVE = #{isActive, jdbcType=NUMERIC, typeHandler=org.apache.ibatis.type.BooleanTypeHandler},
+            DESCRIPTION = #{description},
+            SORT_ORDER = #{sortOrder},
+            IS_DEFAULT = #{isDefault, jdbcType=NUMERIC, typeHandler=org.apache.ibatis.type.BooleanTypeHandler},
+            UPDATED_BY = #{updatedBy},
+            UPDATED_AT = #{updatedAt}
+        WHERE STATUS_CODE = #{statusCode}
+          AND DELETED_AT IS NULL
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ATH_ROLE_STATUS
+        WHERE STATUS_CODE = #{statusCode}
+    </delete>
+
+</mapper>

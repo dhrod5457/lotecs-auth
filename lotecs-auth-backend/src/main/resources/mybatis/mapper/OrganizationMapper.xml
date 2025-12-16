@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.organization.mapper.OrganizationMapper">
+
+    <resultMap id="organizationResultMap" type="lotecs.auth.domain.organization.model.Organization">
+        <id property="id" column="ID"/>
+        <result property="tenantId" column="TENANT_ID"/>
+        <result property="organizationId" column="ORGANIZATION_ID"/>
+        <result property="organizationCode" column="ORGANIZATION_CODE"/>
+        <result property="organizationName" column="ORGANIZATION_NAME"/>
+        <result property="organizationType" column="ORGANIZATION_TYPE"/>
+        <result property="parentOrganizationId" column="PARENT_ORGANIZATION_ID"/>
+        <result property="orgLevel" column="ORG_LEVEL"/>
+        <result property="displayOrder" column="DISPLAY_ORDER"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="active" column="ACTIVE" typeHandler="lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedBy" column="UPDATED_BY"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <sql id="organizationColumns">
+        ID, TENANT_ID, ORGANIZATION_ID, ORGANIZATION_CODE, ORGANIZATION_NAME,
+        ORGANIZATION_TYPE, PARENT_ORGANIZATION_ID, ORG_LEVEL, DISPLAY_ORDER,
+        DESCRIPTION, ACTIVE, CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT
+    </sql>
+
+    <select id="findById" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE ID = #{id}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findByOrganizationId" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE ORGANIZATION_ID = #{organizationId}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findByTenantIdAndCode" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE TENANT_ID = #{tenantId}
+          AND ORGANIZATION_CODE = #{organizationCode}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findByTenantId" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
+        ORDER BY ORG_LEVEL ASC, DISPLAY_ORDER ASC, ORGANIZATION_NAME ASC
+    </select>
+
+    <select id="findByParentOrganizationId" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE PARENT_ORGANIZATION_ID = #{parentOrganizationId}
+          AND DELETED_AT IS NULL
+        ORDER BY DISPLAY_ORDER ASC, ORGANIZATION_NAME ASC
+    </select>
+
+    <select id="findByTenantIdAndType" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE TENANT_ID = #{tenantId}
+          AND ORGANIZATION_TYPE = #{organizationType}
+          AND DELETED_AT IS NULL
+        ORDER BY DISPLAY_ORDER ASC, ORGANIZATION_NAME ASC
+    </select>
+
+    <select id="findRootOrganizations" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE TENANT_ID = #{tenantId}
+          AND PARENT_ORGANIZATION_ID IS NULL
+          AND DELETED_AT IS NULL
+        ORDER BY DISPLAY_ORDER ASC, ORGANIZATION_NAME ASC
+    </select>
+
+    <select id="findActiveByTenantId" resultMap="organizationResultMap">
+        SELECT <include refid="organizationColumns"/>
+        FROM ATH_ORGANIZATION
+        WHERE TENANT_ID = #{tenantId}
+          AND ACTIVE = '1'
+          AND DELETED_AT IS NULL
+        ORDER BY ORG_LEVEL ASC, DISPLAY_ORDER ASC, ORGANIZATION_NAME ASC
+    </select>
+
+    <insert id="insert" parameterType="lotecs.auth.domain.organization.model.Organization">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT ATH_ORGANIZATION_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO ATH_ORGANIZATION (
+            ID, TENANT_ID, ORGANIZATION_ID, ORGANIZATION_CODE, ORGANIZATION_NAME,
+            ORGANIZATION_TYPE, PARENT_ORGANIZATION_ID, ORG_LEVEL, DISPLAY_ORDER,
+            DESCRIPTION, ACTIVE, CREATED_BY, CREATED_AT
+        ) VALUES (
+            #{id}, #{tenantId}, #{organizationId}, #{organizationCode}, #{organizationName},
+            #{organizationType}, #{parentOrganizationId}, #{orgLevel}, #{displayOrder},
+            #{description}, #{active,typeHandler=lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler}, #{createdBy}, #{createdAt}
+        )
+    </insert>
+
+    <update id="update" parameterType="lotecs.auth.domain.organization.model.Organization">
+        UPDATE ATH_ORGANIZATION
+        SET ORGANIZATION_NAME = #{organizationName},
+            ORGANIZATION_TYPE = #{organizationType},
+            PARENT_ORGANIZATION_ID = #{parentOrganizationId},
+            ORG_LEVEL = #{orgLevel},
+            DISPLAY_ORDER = #{displayOrder},
+            DESCRIPTION = #{description},
+            ACTIVE = #{active,typeHandler=lotecs.framework.common.mybatis.typehandler.Boolean01TypeHandler},
+            UPDATED_BY = #{updatedBy},
+            UPDATED_AT = #{updatedAt}
+        WHERE ID = #{id}
+          AND DELETED_AT IS NULL
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ATH_ORGANIZATION
+        WHERE ID = #{id}
+    </delete>
+
+    <delete id="deleteByOrganizationId">
+        DELETE FROM ATH_ORGANIZATION
+        WHERE ORGANIZATION_ID = #{organizationId}
+    </delete>
+
+</mapper>

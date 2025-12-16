@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.tenant.mapper.TenantMapper">
+
+    <resultMap id="tenantResultMap" type="lotecs.auth.domain.tenant.model.Tenant">
+        <id property="tenantId" column="TENANT_ID"/>
+        <result property="siteName" column="SITE_NAME"/>
+        <result property="siteCode" column="SITE_CODE"/>
+        <result property="primaryDomain" column="PRIMARY_DOMAIN"/>
+        <result property="additionalDomains" column="ADDITIONAL_DOMAINS"/>
+        <result property="description" column="DESCRIPTION"/>
+        <result property="siteTitle" column="SITE_TITLE"/>
+        <result property="siteDescription" column="SITE_DESCRIPTION"/>
+        <result property="themeName" column="THEME_NAME"/>
+        <result property="defaultLanguage" column="DEFAULT_LANGUAGE"/>
+        <result property="timezone" column="TIMEZONE"/>
+        <result property="ownerEmail" column="OWNER_EMAIL"/>
+        <result property="adminEmail" column="ADMIN_EMAIL"/>
+        <result property="contactPhone" column="CONTACT_PHONE"/>
+        <result property="parentTenantId" column="PARENT_TENANT_ID"/>
+        <result property="siteLevel" column="SITE_LEVEL"/>
+        <result property="maxContentItems" column="MAX_CONTENT_ITEMS"/>
+        <result property="maxStorageMb" column="MAX_STORAGE_MB"/>
+        <result property="maxUsers" column="MAX_USERS"/>
+        <result property="features" column="FEATURES"/>
+        <result property="settings" column="SETTINGS"/>
+        <result property="status" column="STATUS" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="publishedAt" column="PUBLISHED_AT"/>
+        <result property="unpublishedAt" column="UNPUBLISHED_AT"/>
+        <result property="subscriptionPlanCode" column="SUBSCRIPTION_PLAN_CODE"/>
+        <result property="planStartDate" column="PLAN_START_DATE"/>
+        <result property="planEndDate" column="PLAN_END_DATE"/>
+        <result property="version" column="VERSION"/>
+        <result property="createdBy" column="CREATED_BY"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedBy" column="UPDATED_BY"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <sql id="tenantColumns">
+        TENANT_ID, SITE_NAME, SITE_CODE, PRIMARY_DOMAIN, ADDITIONAL_DOMAINS,
+        DESCRIPTION, SITE_TITLE, SITE_DESCRIPTION, THEME_NAME,
+        DEFAULT_LANGUAGE, TIMEZONE, OWNER_EMAIL, ADMIN_EMAIL, CONTACT_PHONE,
+        PARENT_TENANT_ID, SITE_LEVEL, MAX_CONTENT_ITEMS, MAX_STORAGE_MB, MAX_USERS,
+        FEATURES, SETTINGS, STATUS, PUBLISHED_AT, UNPUBLISHED_AT,
+        SUBSCRIPTION_PLAN_CODE, PLAN_START_DATE, PLAN_END_DATE,
+        VERSION, CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT
+    </sql>
+
+    <select id="findById" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findBySiteCode" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE SITE_CODE = #{siteCode}
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findByDomain" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE (PRIMARY_DOMAIN = #{domain}
+           OR ADDITIONAL_DOMAINS LIKE '%' || #{domain} || '%')
+          AND DELETED_AT IS NULL
+    </select>
+
+    <select id="findAll" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE DELETED_AT IS NULL
+        ORDER BY SITE_LEVEL ASC, SITE_NAME ASC
+    </select>
+
+    <select id="findActive" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE STATUS = 'PUBLISHED'
+          AND DELETED_AT IS NULL
+        ORDER BY SITE_LEVEL ASC, SITE_NAME ASC
+    </select>
+
+    <select id="findByStatus" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE STATUS = #{status}
+          AND DELETED_AT IS NULL
+        ORDER BY SITE_LEVEL ASC, SITE_NAME ASC
+    </select>
+
+    <select id="findByParentTenantId" resultMap="tenantResultMap">
+        SELECT <include refid="tenantColumns"/>
+        FROM ATH_TENANT
+        WHERE PARENT_TENANT_ID = #{parentTenantId}
+          AND DELETED_AT IS NULL
+        ORDER BY SITE_LEVEL ASC, SITE_NAME ASC
+    </select>
+
+    <insert id="insert" parameterType="lotecs.auth.domain.tenant.model.Tenant">
+        INSERT INTO ATH_TENANT (
+            TENANT_ID, SITE_NAME, SITE_CODE, PRIMARY_DOMAIN, ADDITIONAL_DOMAINS,
+            DESCRIPTION, SITE_TITLE, SITE_DESCRIPTION, THEME_NAME,
+            DEFAULT_LANGUAGE, TIMEZONE, OWNER_EMAIL, ADMIN_EMAIL, CONTACT_PHONE,
+            PARENT_TENANT_ID, SITE_LEVEL, MAX_CONTENT_ITEMS, MAX_STORAGE_MB, MAX_USERS,
+            FEATURES, SETTINGS, STATUS, PUBLISHED_AT, UNPUBLISHED_AT,
+            SUBSCRIPTION_PLAN_CODE, PLAN_START_DATE, PLAN_END_DATE,
+            VERSION, CREATED_BY, CREATED_AT
+        ) VALUES (
+            #{tenantId}, #{siteName}, #{siteCode}, #{primaryDomain}, #{additionalDomains},
+            #{description}, #{siteTitle}, #{siteDescription}, #{themeName},
+            #{defaultLanguage}, #{timezone}, #{ownerEmail}, #{adminEmail}, #{contactPhone},
+            #{parentTenantId}, #{siteLevel}, #{maxContentItems}, #{maxStorageMb}, #{maxUsers},
+            #{features}, #{settings}, #{status,typeHandler=org.apache.ibatis.type.EnumTypeHandler}, #{publishedAt}, #{unpublishedAt},
+            #{subscriptionPlanCode}, #{planStartDate}, #{planEndDate},
+            #{version}, #{createdBy}, #{createdAt}
+        )
+    </insert>
+
+    <update id="update" parameterType="lotecs.auth.domain.tenant.model.Tenant">
+        UPDATE ATH_TENANT
+        SET SITE_NAME = #{siteName},
+            PRIMARY_DOMAIN = #{primaryDomain},
+            ADDITIONAL_DOMAINS = #{additionalDomains},
+            DESCRIPTION = #{description},
+            SITE_TITLE = #{siteTitle},
+            SITE_DESCRIPTION = #{siteDescription},
+            THEME_NAME = #{themeName},
+            DEFAULT_LANGUAGE = #{defaultLanguage},
+            TIMEZONE = #{timezone},
+            OWNER_EMAIL = #{ownerEmail},
+            ADMIN_EMAIL = #{adminEmail},
+            CONTACT_PHONE = #{contactPhone},
+            MAX_CONTENT_ITEMS = #{maxContentItems},
+            MAX_STORAGE_MB = #{maxStorageMb},
+            MAX_USERS = #{maxUsers},
+            FEATURES = #{features},
+            SETTINGS = #{settings},
+            STATUS = #{status,typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            PUBLISHED_AT = #{publishedAt},
+            UNPUBLISHED_AT = #{unpublishedAt},
+            SUBSCRIPTION_PLAN_CODE = #{subscriptionPlanCode},
+            PLAN_START_DATE = #{planStartDate},
+            PLAN_END_DATE = #{planEndDate},
+            UPDATED_BY = #{updatedBy},
+            UPDATED_AT = #{updatedAt},
+            VERSION = VERSION + 1
+        WHERE TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
+    </update>
+
+    <delete id="delete">
+        DELETE FROM ATH_TENANT
+        WHERE TENANT_ID = #{tenantId}
+    </delete>
+
+</mapper>

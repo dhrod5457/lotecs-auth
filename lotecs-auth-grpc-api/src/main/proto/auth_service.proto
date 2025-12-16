@@ -147,3 +147,381 @@ message PermissionCheckRequest {
 message PermissionCheckResponse {
   bool has_permission = 1;
 }
+
+// Tenant Service
+service TenantService {
+  rpc GetTenant(GetTenantRequest) returns (TenantResponse);
+  rpc GetTenantBySiteCode(GetTenantBySiteCodeRequest) returns (TenantResponse);
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+  rpc ListActiveTenants(ListActiveTenantsRequest) returns (ListTenantsResponse);
+  rpc CreateTenant(CreateTenantRequest) returns (TenantResponse);
+  rpc UpdateTenant(UpdateTenantRequest) returns (TenantResponse);
+  rpc DeleteTenant(DeleteTenantRequest) returns (DeleteTenantResponse);
+  rpc PublishTenant(PublishTenantRequest) returns (TenantResponse);
+  rpc UnpublishTenant(UnpublishTenantRequest) returns (TenantResponse);
+}
+
+message GetTenantRequest {
+  string tenant_id = 1;
+}
+
+message GetTenantBySiteCodeRequest {
+  string site_code = 1;
+}
+
+message ListTenantsRequest {}
+
+message ListActiveTenantsRequest {}
+
+message ListTenantsResponse {
+  repeated TenantInfo tenants = 1;
+}
+
+message CreateTenantRequest {
+  string site_name = 1;
+  string site_code = 2;
+  string description = 3;
+  string primary_domain = 4;
+  string additional_domains = 5;
+  string site_title = 6;
+  string site_description = 7;
+  string theme_name = 8;
+  string default_language = 9;
+  string timezone = 10;
+  string owner_email = 11;
+  string admin_email = 12;
+  string contact_phone = 13;
+  string parent_tenant_id = 14;
+  int32 site_level = 15;
+  int32 max_content_items = 16;
+  int32 max_storage_mb = 17;
+  int32 max_users = 18;
+  string features = 19;
+  string settings = 20;
+  string created_by = 21;
+}
+
+message UpdateTenantRequest {
+  string tenant_id = 1;
+  string site_name = 2;
+  string description = 3;
+  string primary_domain = 4;
+  string additional_domains = 5;
+  string site_title = 6;
+  string site_description = 7;
+  string theme_name = 8;
+  string default_language = 9;
+  string timezone = 10;
+  string owner_email = 11;
+  string admin_email = 12;
+  string contact_phone = 13;
+  int32 max_content_items = 14;
+  int32 max_storage_mb = 15;
+  int32 max_users = 16;
+  string features = 17;
+  string settings = 18;
+  string updated_by = 19;
+}
+
+message DeleteTenantRequest {
+  string tenant_id = 1;
+}
+
+message DeleteTenantResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PublishTenantRequest {
+  string tenant_id = 1;
+  string updated_by = 2;
+}
+
+message UnpublishTenantRequest {
+  string tenant_id = 1;
+  string reason = 2;
+  string updated_by = 3;
+}
+
+message TenantResponse {
+  TenantInfo tenant = 1;
+  string error_message = 2;
+}
+
+message TenantInfo {
+  string tenant_id = 1;
+  string site_name = 2;
+  string site_code = 3;
+  string primary_domain = 4;
+  string additional_domains = 5;
+  string description = 6;
+  string site_title = 7;
+  string site_description = 8;
+  string theme_name = 9;
+  string default_language = 10;
+  string timezone = 11;
+  string owner_email = 12;
+  string admin_email = 13;
+  string contact_phone = 14;
+  string parent_tenant_id = 15;
+  int32 site_level = 16;
+  int32 max_content_items = 17;
+  int32 max_storage_mb = 18;
+  int32 max_users = 19;
+  string features = 20;
+  string settings = 21;
+  string status = 22;
+  string published_at = 23;
+  string unpublished_at = 24;
+  string subscription_plan_code = 25;
+  string plan_start_date = 26;
+  string plan_end_date = 27;
+  int64 version = 28;
+  string created_by = 29;
+  string created_at = 30;
+  string updated_by = 31;
+  string updated_at = 32;
+}
+
+// RoleStatus Service
+service RoleStatusService {
+  rpc GetRoleStatus(GetRoleStatusRequest) returns (RoleStatusResponse);
+  rpc ListRoleStatuses(ListRoleStatusesRequest) returns (ListRoleStatusesResponse);
+  rpc ListActiveRoleStatuses(ListActiveRoleStatusesRequest) returns (ListRoleStatusesResponse);
+  rpc ListRoleStatusesByCategory(ListRoleStatusesByCategoryRequest) returns (ListRoleStatusesResponse);
+  rpc CreateRoleStatus(CreateRoleStatusRequest) returns (RoleStatusResponse);
+  rpc UpdateRoleStatus(UpdateRoleStatusRequest) returns (RoleStatusResponse);
+  rpc DeleteRoleStatus(DeleteRoleStatusRequest) returns (DeleteRoleStatusResponse);
+}
+
+message GetRoleStatusRequest {
+  string status_code = 1;
+}
+
+message ListRoleStatusesRequest {}
+
+message ListActiveRoleStatusesRequest {}
+
+message ListRoleStatusesByCategoryRequest {
+  string role_category = 1;
+}
+
+message ListRoleStatusesResponse {
+  repeated RoleStatusInfo role_statuses = 1;
+}
+
+message CreateRoleStatusRequest {
+  string status_code = 1;
+  string status_name = 2;
+  string role_category = 3;
+  string description = 4;
+  bool is_active = 5;
+  int32 sort_order = 6;
+  bool is_default = 7;
+  string created_by = 8;
+}
+
+message UpdateRoleStatusRequest {
+  string status_code = 1;
+  string status_name = 2;
+  string role_category = 3;
+  string description = 4;
+  bool is_active = 5;
+  int32 sort_order = 6;
+  bool is_default = 7;
+  string updated_by = 8;
+}
+
+message DeleteRoleStatusRequest {
+  string status_code = 1;
+}
+
+message DeleteRoleStatusResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RoleStatusResponse {
+  RoleStatusInfo role_status = 1;
+  string error_message = 2;
+}
+
+message RoleStatusInfo {
+  int64 id = 1;
+  string status_code = 2;
+  string status_name = 3;
+  string role_category = 4;
+  string description = 5;
+  bool is_active = 6;
+  int32 sort_order = 7;
+  bool is_default = 8;
+  string created_by = 9;
+  string created_at = 10;
+  string updated_by = 11;
+  string updated_at = 12;
+}
+
+// Organization Service (Relay Sync)
+service OrganizationService {
+  rpc GetOrganization(GetOrganizationRequest) returns (OrganizationResponse);
+  rpc ListOrganizations(ListOrganizationsRequest) returns (ListOrganizationsResponse);
+  rpc ListActiveOrganizations(ListActiveOrganizationsRequest) returns (ListOrganizationsResponse);
+  rpc ListRootOrganizations(ListRootOrganizationsRequest) returns (ListOrganizationsResponse);
+  rpc ListChildOrganizations(ListChildOrganizationsRequest) returns (ListOrganizationsResponse);
+  rpc SyncOrganization(SyncOrganizationRequest) returns (OrganizationResponse);
+  rpc DeleteOrganization(DeleteOrganizationRequest) returns (DeleteOrganizationResponse);
+}
+
+message GetOrganizationRequest {
+  string organization_id = 1;
+}
+
+message ListOrganizationsRequest {
+  string tenant_id = 1;
+}
+
+message ListActiveOrganizationsRequest {
+  string tenant_id = 1;
+}
+
+message ListRootOrganizationsRequest {
+  string tenant_id = 1;
+}
+
+message ListChildOrganizationsRequest {
+  string parent_organization_id = 1;
+}
+
+message ListOrganizationsResponse {
+  repeated OrganizationInfo organizations = 1;
+}
+
+message SyncOrganizationRequest {
+  string tenant_id = 1;
+  string organization_id = 2;
+  string organization_code = 3;
+  string organization_name = 4;
+  string organization_type = 5;
+  string parent_organization_id = 6;
+  int32 org_level = 7;
+  int32 display_order = 8;
+  string description = 9;
+  bool active = 10;
+  string sync_by = 11;
+}
+
+message DeleteOrganizationRequest {
+  string organization_id = 1;
+}
+
+message DeleteOrganizationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message OrganizationResponse {
+  OrganizationInfo organization = 1;
+  string error_message = 2;
+}
+
+message OrganizationInfo {
+  int64 id = 1;
+  string tenant_id = 2;
+  string organization_id = 3;
+  string organization_code = 4;
+  string organization_name = 5;
+  string organization_type = 6;
+  string parent_organization_id = 7;
+  int32 org_level = 8;
+  int32 display_order = 9;
+  string description = 10;
+  bool active = 11;
+  string created_by = 12;
+  string created_at = 13;
+  string updated_by = 14;
+  string updated_at = 15;
+}
+
+// UserOrganization Service (Relay Sync)
+service UserOrganizationService {
+  rpc GetUserOrganizations(GetUserOrganizationsRequest) returns (ListUserOrganizationsResponse);
+  rpc GetActiveUserOrganizations(GetActiveUserOrganizationsRequest) returns (ListUserOrganizationsResponse);
+  rpc GetPrimaryUserOrganization(GetPrimaryUserOrganizationRequest) returns (UserOrganizationResponse);
+  rpc GetOrganizationUsers(GetOrganizationUsersRequest) returns (ListUserOrganizationsResponse);
+  rpc GetActiveOrganizationUsers(GetActiveOrganizationUsersRequest) returns (ListUserOrganizationsResponse);
+  rpc SyncUserOrganization(SyncUserOrganizationRequest) returns (UserOrganizationResponse);
+  rpc DeleteUserOrganization(DeleteUserOrganizationRequest) returns (DeleteUserOrganizationResponse);
+  rpc DeleteAllUserOrganizations(DeleteAllUserOrganizationsRequest) returns (DeleteUserOrganizationResponse);
+}
+
+message GetUserOrganizationsRequest {
+  string user_id = 1;
+}
+
+message GetActiveUserOrganizationsRequest {
+  string user_id = 1;
+}
+
+message GetPrimaryUserOrganizationRequest {
+  string user_id = 1;
+}
+
+message GetOrganizationUsersRequest {
+  string organization_id = 1;
+}
+
+message GetActiveOrganizationUsersRequest {
+  string organization_id = 1;
+}
+
+message ListUserOrganizationsResponse {
+  repeated UserOrganizationInfo user_organizations = 1;
+}
+
+message SyncUserOrganizationRequest {
+  string tenant_id = 1;
+  string user_id = 2;
+  string organization_id = 3;
+  string role_id = 4;
+  bool is_primary = 5;
+  string position = 6;
+  string start_date = 7;
+  string end_date = 8;
+  bool active = 9;
+  string sync_by = 10;
+}
+
+message DeleteUserOrganizationRequest {
+  int64 id = 1;
+}
+
+message DeleteAllUserOrganizationsRequest {
+  string user_id = 1;
+}
+
+message DeleteUserOrganizationResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UserOrganizationResponse {
+  UserOrganizationInfo user_organization = 1;
+  string error_message = 2;
+}
+
+message UserOrganizationInfo {
+  int64 id = 1;
+  string tenant_id = 2;
+  string user_id = 3;
+  string organization_id = 4;
+  string role_id = 5;
+  bool is_primary = 6;
+  string position = 7;
+  string start_date = 8;
+  string end_date = 9;
+  bool active = 10;
+  string created_by = 11;
+  string created_at = 12;
+  string updated_by = 13;
+  string updated_at = 14;
+}
