@@ -56,9 +56,7 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
             // additionalData 추가
             if (loginResponse.getAdditionalData() != null) {
                 Struct additionalDataStruct = StructConverter.toStruct(loginResponse.getAdditionalData());
-                if (additionalDataStruct != null) {
-                    grpcResponseBuilder.setAdditionalData(additionalDataStruct);
-                }
+                grpcResponseBuilder.setAdditionalData(additionalDataStruct);
             }
 
             responseObserver.onNext(grpcResponseBuilder.build());

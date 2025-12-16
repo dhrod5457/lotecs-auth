@@ -2,6 +2,7 @@ package lotecs.auth.application.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lotecs.auth.application.auth.dto.AuthResult;
 import lotecs.auth.application.auth.dto.LoginRequest;
 import lotecs.auth.application.auth.dto.LoginResponse;
 import lotecs.auth.application.auth.dto.ValidateTokenResponse;
@@ -45,19 +46,6 @@ public class AuthService {
     private final UserDtoMapper userDtoMapper;
 
     /**
-     * 인증 결과 홀더 (User + additionalData)
-     */
-    private record AuthResult(User user, Map<String, Object> additionalData) {
-        static AuthResult of(User user) {
-            return new AuthResult(user, null);
-        }
-
-        static AuthResult of(User user, Map<String, Object> additionalData) {
-            return new AuthResult(user, additionalData);
-        }
-    }
-
-    /**
      * 로그인 처리
      *
      * @param request 로그인 요청
@@ -96,7 +84,7 @@ public class AuthService {
                 throw new UnsupportedOperationException("Unsupported SSO type: " + ssoConfig.getSsoType());
         }
 
-        User user = authResult.user();
+        User user = authResult.getUser();
 
         // 3. 로그인 정보 업데이트
         user.recordLoginSuccess(request.getIpAddress());
@@ -124,7 +112,7 @@ public class AuthService {
                 .expiresIn(tokenResponse.getExpiresIn())
                 .user(userDtoMapper.toDto(user))
                 .ssoType(ssoConfig.getSsoType())
-                .additionalData(authResult.additionalData())
+                .additionalData(authResult.getAdditionalData())
                 .build();
     }
 
