@@ -27,28 +27,32 @@ repositories {
 }
 
 dependencies {
-    // LOTECS Framework
-    implementation 'lotecs.framework:lotecs-core:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-jwt-core:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-jwt-web:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-jwt-redis:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-cache-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-crypto-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-logging-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-tenant-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-mybatis-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-exception-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-web-spring-boot-starter:1.0.0-SNAPSHOT'
-    implementation 'lotecs.framework:lotecs-ratelimit-spring-boot-starter:1.0.0-SNAPSHOT'
+    // LOTECS Dependencies BOM (버전 통합 관리)
+    implementation platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
+    annotationProcessor platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
+
+    // LOTECS Framework - 버전은 BOM에서 관리
+    implementation 'lotecs.framework:lotecs-core'
+    implementation 'lotecs.framework:lotecs-jwt-core'
+    implementation 'lotecs.framework:lotecs-jwt-web'
+    implementation 'lotecs.framework:lotecs-jwt-redis'
+    implementation 'lotecs.framework:lotecs-cache-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-crypto-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-logging-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-tenant-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-mybatis-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-exception-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-web-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-ratelimit-spring-boot-starter'
 
     // gRPC API
     implementation project(':lotecs-auth-grpc-api')
 
-    // Relay gRPC SDK
-    implementation 'lotecs.relay:relay-grpc-sdk:1.0.0-SNAPSHOT'
+    // Relay gRPC SDK - 버전은 BOM에서 관리
+    implementation 'lotecs.relay:relay-grpc-sdk'
 
-    // LOTECS gRPC Core (StructConverter)
-    implementation 'lotecs.framework:lotecs-grpc-core:1.0.0-SNAPSHOT'
+    // LOTECS gRPC Core (StructConverter) - 버전은 BOM에서 관리
+    implementation 'lotecs.framework:lotecs-grpc-core'
 
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -57,12 +61,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // gRPC
-    implementation 'net.devh:grpc-server-spring-boot-starter:2.15.0.RELEASE'
-    implementation 'net.devh:grpc-client-spring-boot-starter:2.15.0.RELEASE'
+    // gRPC - 버전은 BOM에서 관리
+    implementation 'net.devh:grpc-server-spring-boot-starter'
+    implementation 'net.devh:grpc-client-spring-boot-starter'
 
-    // MyBatis
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    // MyBatis - 버전은 BOM에서 관리
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter'
 
     // Database
     runtimeOnly 'com.oracle.database.jdbc:ojdbc8:23.3.0.23.09'
@@ -74,13 +78,13 @@ dependencies {
     // Apache Directory API (for LDAP SSO)
     implementation 'org.apache.directory.api:api-all:2.1.5'
 
-    // Lombok
+    // Lombok - 버전은 BOM에서 관리
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // MapStruct
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    // MapStruct - 버전은 BOM에서 관리
+    implementation 'org.mapstruct:mapstruct'
+    annotationProcessor 'org.mapstruct:mapstruct-processor'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     // Test
@@ -88,11 +92,11 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'io.grpc:grpc-testing:1.59.0'
+    testImplementation 'io.grpc:grpc-testing'
 
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor'
     testAnnotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 }
 
