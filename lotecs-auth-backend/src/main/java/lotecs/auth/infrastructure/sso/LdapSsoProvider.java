@@ -34,11 +34,11 @@ public class LdapSsoProvider implements SsoProvider {
     public SsoAuthResult authenticate(SsoAuthRequest request) {
         LdapConnection connection = null;
         try {
-            TenantSsoConfig config = ssoConfigRepository.findByTenantId(request.tenantId())
-                    .orElseThrow(() -> new IllegalStateException("SSO configuration not found for tenant: " + request.tenantId()));
+            TenantSsoConfig config = ssoConfigRepository.findByTenantId(request.getTenantId())
+                    .orElseThrow(() -> new IllegalStateException("SSO configuration not found for tenant: " + request.getTenantId()));
 
             if (config.getAdditionalConfig() == null) {
-                log.error("LDAP configuration is missing for tenant: {}", request.tenantId());
+                log.error("LDAP configuration is missing for tenant: {}", request.getTenantId());
                 return SsoAuthResult.failure("CONFIG_ERROR", "LDAP configuration is missing");
             }
 
@@ -48,11 +48,11 @@ public class LdapSsoProvider implements SsoProvider {
             String baseDn = additionalConfig.has("base_dn") ? additionalConfig.get("base_dn").asText() : null;
 
             if (ldapUrl == null || baseDn == null) {
-                log.error("LDAP configuration is incomplete (ldap_url or base_dn missing) for tenant: {}", request.tenantId());
+                log.error("LDAP configuration is incomplete (ldap_url or base_dn missing) for tenant: {}", request.getTenantId());
                 return SsoAuthResult.failure("CONFIG_ERROR", "LDAP configuration is incomplete");
             }
 
-            log.debug("Authenticating user {} via LDAP for tenant {}", request.username(), request.tenantId());
+            log.debug("Authenticating user {} via LDAP for tenant {}", request.getUsername(), request.getTenantId());
 
             // Parse LDAP URL
             URI uri = new URI(ldapUrl);
@@ -68,7 +68,7 @@ public class LdapSsoProvider implements SsoProvider {
 
             // Search for user DN by username
             // TODO: Make search filter configurable (currently hardcoded to uid)
-            String searchFilter = String.format("(uid=%s)", request.username());
+            String searchFilter = String.format("(uid=%s)", request.getUsername());
             String userDn = null;
 
             try {
@@ -79,7 +79,7 @@ public class LdapSsoProvider implements SsoProvider {
                     Entry entry = cursor.get();
                     userDn = entry.getDn().getName();
                 } else {
-                    log.warn("User {} not found in LDAP for tenant {}", request.username(), request.tenantId());
+                    log.warn("User {} not found in LDAP for tenant {}", request.getUsername(), request.getTenantId());
                     connection.unBind();
                     return SsoAuthResult.failure("USER_NOT_FOUND", "User not found in LDAP directory");
                 }
@@ -87,16 +87,16 @@ public class LdapSsoProvider implements SsoProvider {
                 cursor.close();
                 connection.unBind();
             } catch (Exception e) {
-                log.error("LDAP search failed for user {}: {}", request.username(), e.getMessage());
+                log.error("LDAP search failed for user {}: {}", request.getUsername(), e.getMessage());
                 return SsoAuthResult.failure("CONNECTION_ERROR", "LDAP search failed: " + e.getMessage());
             }
 
             // Authenticate by binding with user DN and password
             try {
-                connection.bind(userDn, request.password());
-                log.info("Successfully authenticated user {} via LDAP for tenant {}", request.username(), request.tenantId());
+                connection.bind(userDn, request.getPassword());
+                log.info("Successfully authenticated user {} via LDAP for tenant {}", request.getUsername(), request.getTenantId());
             } catch (LdapException e) {
-                log.warn("LDAP authentication failed for user {}: {}", request.username(), e.getMessage());
+                log.warn("LDAP authentication failed for user {}: {}", request.getUsername(), e.getMessage());
                 return SsoAuthResult.failure("INVALID_CREDENTIALS", "Invalid username or password");
             }
 
@@ -125,21 +125,21 @@ public class LdapSsoProvider implements SsoProvider {
 
                 cursor.close();
             } catch (Exception e) {
-                log.error("Failed to retrieve LDAP user attributes for user {}: {}", request.username(), e.getMessage());
+                log.error("Failed to retrieve LDAP user attributes for user {}: {}", request.getUsername(), e.getMessage());
                 // Continue with authentication even if attribute retrieval fails
             }
 
             // Use username as external user ID (LDAP DN could be used instead)
             String externalUserId = userDn;
 
-            return SsoAuthResult.success(externalUserId, request.username(), email, fullName, roles);
+            return SsoAuthResult.success(externalUserId, request.getUsername(), email, fullName, roles);
 
         } catch (IllegalStateException e) {
             log.error("Configuration error: {}", e.getMessage());
             return SsoAuthResult.failure("CONFIG_ERROR", e.getMessage());
         } catch (Exception e) {
             log.error("LDAP authentication failed for user {} in tenant {}: {}",
-                    request.username(), request.tenantId(), e.getMessage(), e);
+                    request.getUsername(), request.getTenantId(), e.getMessage(), e);
             return SsoAuthResult.failure("CONNECTION_ERROR", "Connection to LDAP failed: " + e.getMessage());
         } finally {
             // Close connection

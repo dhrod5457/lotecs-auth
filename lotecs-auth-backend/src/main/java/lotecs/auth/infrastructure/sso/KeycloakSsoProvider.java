@@ -29,15 +29,15 @@ public class KeycloakSsoProvider implements SsoProvider {
     @Override
     public SsoAuthResult authenticate(SsoAuthRequest request) {
         try {
-            TenantSsoConfig config = ssoConfigRepository.findByTenantId(request.tenantId())
-                    .orElseThrow(() -> new IllegalStateException("SSO configuration not found for tenant: " + request.tenantId()));
+            TenantSsoConfig config = ssoConfigRepository.findByTenantId(request.getTenantId())
+                    .orElseThrow(() -> new IllegalStateException("SSO configuration not found for tenant: " + request.getTenantId()));
 
             if (config.getSsoServerUrl() == null || config.getSsoRealm() == null || config.getSsoClientId() == null) {
-                log.error("Keycloak configuration is incomplete for tenant: {}", request.tenantId());
+                log.error("Keycloak configuration is incomplete for tenant: {}", request.getTenantId());
                 return SsoAuthResult.failure("CONFIG_ERROR", "Keycloak configuration is incomplete");
             }
 
-            log.debug("Authenticating user {} via Keycloak for tenant {}", request.username(), request.tenantId());
+            log.debug("Authenticating user {} via Keycloak for tenant {}", request.getUsername(), request.getTenantId());
 
             // Build Keycloak client with Password Grant
             Keycloak keycloak = KeycloakBuilder.builder()
@@ -45,8 +45,8 @@ public class KeycloakSsoProvider implements SsoProvider {
                     .realm(config.getSsoRealm())
                     .clientId(config.getSsoClientId())
                     .clientSecret(config.getSsoClientSecret())
-                    .username(request.username())
-                    .password(request.password())
+                    .username(request.getUsername())
+                    .password(request.getPassword())
                     .build();
 
             // Obtain Access Token
@@ -72,7 +72,7 @@ public class KeycloakSsoProvider implements SsoProvider {
 
             // Extract user information from claims
             String externalUserId = claims.has("sub") ? claims.get("sub").asText() : null;
-            String username = claims.has("preferred_username") ? claims.get("preferred_username").asText() : request.username();
+            String username = claims.has("preferred_username") ? claims.get("preferred_username").asText() : request.getUsername();
             String email = claims.has("email") ? claims.get("email").asText() : null;
             String fullName = claims.has("name") ? claims.get("name").asText() : username;
 
@@ -84,7 +84,7 @@ public class KeycloakSsoProvider implements SsoProvider {
                 rolesNode.forEach(role -> roles.add(role.asText()));
             }
 
-            log.info("Successfully authenticated user {} via Keycloak for tenant {}", username, request.tenantId());
+            log.info("Successfully authenticated user {} via Keycloak for tenant {}", username, request.getTenantId());
 
             return SsoAuthResult.success(externalUserId, username, email, fullName, roles);
 
@@ -93,7 +93,7 @@ public class KeycloakSsoProvider implements SsoProvider {
             return SsoAuthResult.failure("CONFIG_ERROR", e.getMessage());
         } catch (Exception e) {
             log.error("Keycloak authentication failed for user {} in tenant {}: {}",
-                    request.username(), request.tenantId(), e.getMessage(), e);
+                    request.getUsername(), request.getTenantId(), e.getMessage(), e);
             return SsoAuthResult.failure("CONNECTION_ERROR", "Connection to Keycloak failed: " + e.getMessage());
         }
     }

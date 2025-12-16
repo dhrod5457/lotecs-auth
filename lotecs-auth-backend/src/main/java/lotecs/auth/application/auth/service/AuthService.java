@@ -175,24 +175,23 @@ public class AuthService {
         SsoProvider ssoProvider = ssoProviderFactory.getProvider(ssoConfig.getSsoType());
 
         // SSO 인증 요청
-        SsoAuthRequest ssoRequest = new SsoAuthRequest(
-                request.getTenantId(),
-                request.getUsername(),
-                request.getPassword(),
-                request.getIpAddress()
-        );
+        SsoAuthRequest ssoRequest = new SsoAuthRequest();
+        ssoRequest.setTenantId(request.getTenantId());
+        ssoRequest.setUsername(request.getUsername());
+        ssoRequest.setPassword(request.getPassword());
+        ssoRequest.setIpAddress(request.getIpAddress());
 
         SsoAuthResult ssoResult = ssoProvider.authenticate(ssoRequest);
 
         // 인증 실패 처리
-        if (!ssoResult.success()) {
+        if (!ssoResult.isSuccess()) {
             log.warn("[AUTH] 외부 SSO 인증 실패: ssoType={}, errorCode={}, errorMessage={}",
-                    ssoConfig.getSsoType(), ssoResult.errorCode(), ssoResult.errorMessage());
-            throw new IllegalArgumentException("SSO authentication failed: " + ssoResult.errorMessage());
+                    ssoConfig.getSsoType(), ssoResult.getErrorCode(), ssoResult.getErrorMessage());
+            throw new IllegalArgumentException("SSO authentication failed: " + ssoResult.getErrorMessage());
         }
 
         log.info("[AUTH] 외부 SSO 인증 성공: ssoType={}, externalUserId={}, username={}",
-                ssoConfig.getSsoType(), ssoResult.externalUserId(), ssoResult.username());
+                ssoConfig.getSsoType(), ssoResult.getExternalUserId(), ssoResult.getUsername());
 
         // 사용자 동기화 (UserSyncService)
         User user = userSyncService.syncUserFromExternal(ssoResult, ssoConfig);
@@ -201,7 +200,7 @@ public class AuthService {
         validateUserStatus(user);
 
         log.info("[AUTH] 외부 SSO 인증 및 동기화 완료: userId={}, externalUserId={}",
-                user.getUserId(), ssoResult.externalUserId());
+                user.getUserId(), ssoResult.getExternalUserId());
 
         return user;
     }

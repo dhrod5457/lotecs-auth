@@ -37,12 +37,12 @@ public class UserSyncService {
      */
     public User syncUserFromExternal(SsoAuthResult ssoResult, TenantSsoConfig config) {
         log.debug("[SYNC] 사용자 동기화 시작: tenantId={}, externalUserId={}, ssoType={}",
-                config.getTenantId(), ssoResult.externalUserId(), config.getSsoType());
+                config.getTenantId(), ssoResult.getExternalUserId(), config.getSsoType());
 
         // 1. ExternalUserMapping에서 기존 매핑 조회
         Optional<ExternalUserMapping> mappingOpt = mappingRepository.findByExternalUserId(
                 config.getTenantId(),
-                ssoResult.externalUserId(),
+                ssoResult.getExternalUserId(),
                 config.getSsoType().name()
         );
 
@@ -55,7 +55,7 @@ public class UserSyncService {
                     .orElseThrow(() -> new IllegalStateException(
                             "매핑된 사용자를 찾을 수 없습니다: userId=" + mapping.getUserId()));
 
-            user.updateFromExternal(ssoResult.email(), ssoResult.fullName());
+            user.updateFromExternal(ssoResult.getEmail(), ssoResult.getFullName());
             user = userRepository.save(user);
 
             // 매핑 정보 업데이트 (last_synced_at)
@@ -63,15 +63,15 @@ public class UserSyncService {
             mappingRepository.save(mapping);
 
             log.info("[SYNC] 기존 사용자 업데이트: userId={}, externalUserId={}, username={}",
-                    user.getUserId(), ssoResult.externalUserId(), user.getUsername());
+                    user.getUserId(), ssoResult.getExternalUserId(), user.getUsername());
 
         } else {
             // 매핑 없으면 신규 생성
             user = User.createFromExternal(
                     config.getTenantId(),
-                    ssoResult.username(),
-                    ssoResult.email(),
-                    ssoResult.fullName()
+                    ssoResult.getUsername(),
+                    ssoResult.getEmail(),
+                    ssoResult.getFullName()
             );
             user = userRepository.save(user);
 
@@ -79,7 +79,7 @@ public class UserSyncService {
             ExternalUserMapping mapping = ExternalUserMapping.builder()
                     .tenantId(config.getTenantId())
                     .userId(user.getUserId())
-                    .externalUserId(ssoResult.externalUserId())
+                    .externalUserId(ssoResult.getExternalUserId())
                     .externalSystem(config.getSsoType().name())
                     .lastSyncedAt(LocalDateTime.now())
                     .createdAt(LocalDateTime.now())
@@ -88,17 +88,17 @@ public class UserSyncService {
             mappingRepository.save(mapping);
 
             log.info("[SYNC] 신규 사용자 생성: userId={}, externalUserId={}, username={}",
-                    user.getUserId(), ssoResult.externalUserId(), user.getUsername());
+                    user.getUserId(), ssoResult.getExternalUserId(), user.getUsername());
         }
 
         // 2. 역할 동기화 (config.isRoleMappingEnabled() 확인)
-        if (config.isRoleMappingEnabled() && ssoResult.roles() != null && !ssoResult.roles().isEmpty()) {
-            syncUserRoles(user, ssoResult.roles());
-            log.debug("[SYNC] 역할 동기화 완료: userId={}, roles={}", user.getUserId(), ssoResult.roles());
+        if (config.isRoleMappingEnabled() && ssoResult.getRoles() != null && !ssoResult.getRoles().isEmpty()) {
+            syncUserRoles(user, ssoResult.getRoles());
+            log.debug("[SYNC] 역할 동기화 완료: userId={}, roles={}", user.getUserId(), ssoResult.getRoles());
         }
 
         log.info("[SYNC] 사용자 동기화 완료: userId={}, tenantId={}, externalUserId={}",
-                user.getUserId(), user.getTenantId(), ssoResult.externalUserId());
+                user.getUserId(), user.getTenantId(), ssoResult.getExternalUserId());
 
         return user;
     }

@@ -23,7 +23,7 @@ public class RelayClient {
 
     public RelayAuthResponse authenticate(String relayEndpoint, RelayAuthRequest request) {
         log.debug("Authenticating user '{}' for tenant '{}' via relay endpoint: {}",
-            request.username(), request.tenantId(), relayEndpoint);
+            request.getUsername(), request.getTenantId(), relayEndpoint);
 
         ManagedChannel channel = getOrCreateChannel(relayEndpoint);
         AuthServiceGrpc.AuthServiceBlockingStub stub = AuthServiceGrpc.newBlockingStub(channel)
@@ -31,23 +31,23 @@ public class RelayClient {
 
         try {
             LoginRequest loginRequest = LoginRequest.newBuilder()
-                .setUsername(request.username())
-                .setPassword(request.password())
-                .setTenantId(request.tenantId())
+                .setUsername(request.getUsername())
+                .setPassword(request.getPassword())
+                .setTenantId(request.getTenantId())
                 .build();
 
             LoginResponse response = stub.login(loginRequest);
 
             if (response.hasUser()) {
-                log.debug("Authentication successful for user '{}'", request.username());
+                log.debug("Authentication successful for user '{}'", request.getUsername());
                 return RelayAuthResponse.success(
                     response.getUser().getUserId(),
-                    request.username(),
+                    request.getUsername(),
                     response.getUser().getFullName(),
                     List.copyOf(response.getUser().getRolesList())
                 );
             } else {
-                log.warn("Authentication failed for user '{}'", request.username());
+                log.warn("Authentication failed for user '{}'", request.getUsername());
                 return RelayAuthResponse.failure(
                     "AUTH_FAILED",
                     "Authentication failed"
@@ -55,14 +55,14 @@ public class RelayClient {
             }
         } catch (StatusRuntimeException e) {
             log.error("gRPC error during authentication for user '{}': {}",
-                request.username(), e.getStatus(), e);
+                request.getUsername(), e.getStatus(), e);
             return RelayAuthResponse.failure(
                 e.getStatus().getCode().name(),
                 e.getStatus().getDescription() != null ? e.getStatus().getDescription() : "gRPC communication error"
             );
         } catch (Exception e) {
             log.error("Unexpected error during authentication for user '{}'",
-                request.username(), e);
+                request.getUsername(), e);
             return RelayAuthResponse.failure(
                 "INTERNAL_ERROR",
                 "An unexpected error occurred during authentication"

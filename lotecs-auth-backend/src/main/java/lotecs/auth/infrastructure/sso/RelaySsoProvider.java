@@ -23,39 +23,39 @@ public class RelaySsoProvider implements SsoProvider {
     @Override
     public SsoAuthResult authenticate(SsoAuthRequest request) {
         try {
-            TenantSsoConfig config = ssoConfigRepository.findByTenantId(request.tenantId())
-                    .orElseThrow(() -> new IllegalStateException("SSO configuration not found for tenant: " + request.tenantId()));
+            TenantSsoConfig config = ssoConfigRepository.findByTenantId(request.getTenantId())
+                    .orElseThrow(() -> new IllegalStateException("SSO configuration not found for tenant: " + request.getTenantId()));
 
             if (config.getRelayEndpoint() == null || config.getRelayEndpoint().isBlank()) {
-                log.error("Relay endpoint is not configured for tenant: {}", request.tenantId());
+                log.error("Relay endpoint is not configured for tenant: {}", request.getTenantId());
                 return SsoAuthResult.failure("CONFIG_ERROR", "Relay endpoint is not configured");
             }
 
-            log.debug("Authenticating user {} via Relay for tenant {}", request.username(), request.tenantId());
+            log.debug("Authenticating user {} via Relay for tenant {}", request.getUsername(), request.getTenantId());
 
-            RelayAuthRequest relayRequest = new RelayAuthRequest(
-                    request.tenantId(),
-                    request.username(),
-                    request.password()
-            );
+            RelayAuthRequest relayRequest = RelayAuthRequest.builder()
+                    .tenantId(request.getTenantId())
+                    .username(request.getUsername())
+                    .password(request.getPassword())
+                    .build();
 
             RelayAuthResponse relayResponse = relayClient.authenticate(config.getRelayEndpoint(), relayRequest);
 
-            if (relayResponse.success()) {
-                log.info("Successfully authenticated user {} via Relay for tenant {}", request.username(), request.tenantId());
+            if (relayResponse.isSuccess()) {
+                log.info("Successfully authenticated user {} via Relay for tenant {}", request.getUsername(), request.getTenantId());
                 return SsoAuthResult.success(
-                        relayResponse.externalUserId(),
-                        relayResponse.username(),
-                        relayResponse.email(),
-                        relayResponse.fullName(),
-                        relayResponse.roles()
+                        relayResponse.getExternalUserId(),
+                        relayResponse.getUsername(),
+                        relayResponse.getEmail(),
+                        relayResponse.getFullName(),
+                        relayResponse.getRoles()
                 );
             } else {
                 log.warn("Relay authentication failed for user {}: {} - {}",
-                        request.username(), relayResponse.errorCode(), relayResponse.errorMessage());
+                        request.getUsername(), relayResponse.getErrorCode(), relayResponse.getErrorMessage());
                 return SsoAuthResult.failure(
-                        relayResponse.errorCode(),
-                        relayResponse.errorMessage()
+                        relayResponse.getErrorCode(),
+                        relayResponse.getErrorMessage()
                 );
             }
 
@@ -64,7 +64,7 @@ public class RelaySsoProvider implements SsoProvider {
             return SsoAuthResult.failure("CONFIG_ERROR", e.getMessage());
         } catch (Exception e) {
             log.error("Relay authentication failed for user {} in tenant {}: {}",
-                    request.username(), request.tenantId(), e.getMessage(), e);
+                    request.getUsername(), request.getTenantId(), e.getMessage(), e);
             return SsoAuthResult.failure("CONNECTION_ERROR", "Connection to Relay failed: " + e.getMessage());
         }
     }
