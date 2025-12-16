@@ -13,7 +13,7 @@ import lotecs.auth.application.user.dto.CreateUserRequest;
 import lotecs.auth.application.user.dto.UpdateUserRequest;
 import lotecs.auth.application.user.dto.UserDto;
 import lotecs.auth.application.user.service.UserService;
-import lotecs.auth.infrastructure.grpc.StructConverter;
+import lotecs.framework.common.grpc.core.util.StructConverter;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.List;

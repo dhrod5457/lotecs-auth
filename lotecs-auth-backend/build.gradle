@@ -45,7 +45,10 @@ dependencies {
     implementation project(':lotecs-auth-grpc-api')
 
     // Relay gRPC SDK
-    implementation 'lotecs.relay:relay-grpc-api:1.0.0-SNAPSHOT'
+    implementation 'lotecs.relay:relay-grpc-sdk:1.0.0-SNAPSHOT'
+
+    // LOTECS gRPC Core (StructConverter)
+    implementation 'lotecs.framework:lotecs-grpc-core:1.0.0-SNAPSHOT'
 
     // Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'

@@ -7,9 +7,9 @@ import lotecs.auth.domain.sso.repository.TenantSsoConfigRepository;
 import lotecs.auth.domain.sso.SsoAuthRequest;
 import lotecs.auth.domain.sso.SsoAuthResult;
 import lotecs.auth.domain.sso.SsoProvider;
-import lotecs.auth.infrastructure.relay.RelayAuthRequest;
-import lotecs.auth.infrastructure.relay.RelayAuthResponse;
-import lotecs.auth.infrastructure.relay.RelayClient;
+import lotecs.relay.sdk.auth.RelayAuthClient;
+import lotecs.relay.sdk.auth.RelayAuthRequest;
+import lotecs.relay.sdk.auth.RelayAuthResponse;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 public class RelaySsoProvider implements SsoProvider {
 
     private final TenantSsoConfigRepository ssoConfigRepository;
-    private final RelayClient relayClient;
+    private final RelayAuthClient relayClient;
 
     @Override
     public SsoAuthResult authenticate(SsoAuthRequest request) {
