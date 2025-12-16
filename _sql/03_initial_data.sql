@@ -1,94 +1,247 @@
--- LOTECS Auth Service - Initial Data
+-- LOTECS Auth Service - Initial Data (ATH_ prefix)
 -- Execute as: lotecs_auth user
--- Date: 2025-12-15
 
--- 1. SSO 설정 - 세종대 (RELAY)
-INSERT INTO auth_tenant_sso_config (
-    tenant_id, sso_type, sso_enabled,
-    relay_endpoint, relay_timeout_ms,
-    user_sync_enabled, role_mapping_enabled
-) VALUES (
-    'sejong', 'RELAY', 1,
-    'sejong-server.university.ac.kr:9090', 5000,
-    1, 1
-);
+-- ============================================
+-- 1. 테넌트 데이터
+-- ============================================
+INSERT INTO ATH_TENANT (TENANT_ID, SITE_NAME, SITE_CODE, DESCRIPTION, STATUS, CREATED_BY)
+VALUES ('SYSTEM', 'LOTECS System', 'system', '시스템 기본 테넌트', 'PUBLISHED', 'SYSTEM')
+/
 
--- 2. SSO 설정 - 기본 테넌트 (INTERNAL)
-INSERT INTO auth_tenant_sso_config (
-    tenant_id, sso_type, sso_enabled
-) VALUES (
-    'default', 'INTERNAL', 1
-);
+INSERT INTO ATH_TENANT (TENANT_ID, SITE_NAME, SITE_CODE, DESCRIPTION, STATUS, CREATED_BY)
+VALUES ('SEJONG', 'Sejong University', 'sejong', '세종대학교 테넌트', 'PUBLISHED', 'SYSTEM')
+/
 
--- 3. 기본 권한 생성
-INSERT INTO auth_permissions (permission_id, permission_code, description, resource_type)
-VALUES ('perm-001', 'USER_READ', '사용자 조회 권한', 'USER');
+-- ============================================
+-- 2. 역할 상태 마스터 데이터
+-- ============================================
+-- 공통 상태
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('ACTIVE', '활성', 'COMMON', 1, '활성 상태 - 모든 권한 사용 가능', 1, 1, 'SYSTEM')
+/
 
-INSERT INTO auth_permissions (permission_id, permission_code, description, resource_type)
-VALUES ('perm-002', 'USER_WRITE', '사용자 생성/수정 권한', 'USER');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('INACTIVE', '비활성', 'COMMON', 0, '비활성 상태 - 권한 사용 불가', 99, 0, 'SYSTEM')
+/
 
-INSERT INTO auth_permissions (permission_id, permission_code, description, resource_type)
-VALUES ('perm-003', 'USER_DELETE', '사용자 삭제 권한', 'USER');
+-- 학생 상태
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('ENROLLED', '재학', 'STUDENT', 1, '재학 중 - 모든 학생 권한 사용 가능', 1, 1, 'SYSTEM')
+/
 
-INSERT INTO auth_permissions (permission_id, permission_code, description, resource_type)
-VALUES ('perm-004', 'ROLE_MANAGE', '역할 관리 권한', 'ROLE');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('ON_LEAVE', '휴학', 'STUDENT', 0, '휴학 중 - 일부 권한 제한', 2, 0, 'SYSTEM')
+/
 
-INSERT INTO auth_permissions (permission_id, permission_code, description, resource_type)
-VALUES ('perm-005', 'SSO_CONFIG', 'SSO 설정 권한', 'SSO');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('GRADUATED', '졸업', 'STUDENT', 0, '졸업 - 동문 권한만 사용 가능', 3, 0, 'SYSTEM')
+/
 
--- 4. 기본 역할 생성 (default 테넌트)
-INSERT INTO auth_roles (role_id, tenant_id, role_name, display_name, description, priority)
-VALUES ('role-001', 'default', 'ADMIN', '시스템 관리자', '전체 시스템 관리 권한', 100);
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('EXPELLED', '퇴학', 'STUDENT', 0, '퇴학 - 권한 사용 불가', 4, 0, 'SYSTEM')
+/
 
-INSERT INTO auth_roles (role_id, tenant_id, role_name, display_name, description, priority)
-VALUES ('role-002', 'default', 'USER', '일반 사용자', '기본 사용자 권한', 10);
+-- 교수 상태
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('PROFESSOR_ACTIVE', '재직', 'PROFESSOR', 1, '재직 중 - 모든 교수 권한 사용 가능', 1, 1, 'SYSTEM')
+/
 
--- 5. 역할-권한 매핑 (ADMIN)
-INSERT INTO auth_role_permissions (role_id, permission_id)
-VALUES ('role-001', 'perm-001');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('PROFESSOR_SABBATICAL', '안식년', 'PROFESSOR', 1, '안식년 - 일부 권한 유지', 2, 0, 'SYSTEM')
+/
 
-INSERT INTO auth_role_permissions (role_id, permission_id)
-VALUES ('role-001', 'perm-002');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('PROFESSOR_RETIRED', '퇴직', 'PROFESSOR', 0, '퇴직 - 명예교수 권한만 사용 가능', 3, 0, 'SYSTEM')
+/
 
-INSERT INTO auth_role_permissions (role_id, permission_id)
-VALUES ('role-001', 'perm-003');
+-- 직원 상태
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('STAFF_ACTIVE', '재직', 'STAFF', 1, '재직 중 - 모든 직원 권한 사용 가능', 1, 1, 'SYSTEM')
+/
 
-INSERT INTO auth_role_permissions (role_id, permission_id)
-VALUES ('role-001', 'perm-004');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('STAFF_ON_LEAVE', '휴직', 'STAFF', 0, '휴직 중 - 권한 일시 정지', 2, 0, 'SYSTEM')
+/
 
-INSERT INTO auth_role_permissions (role_id, permission_id)
-VALUES ('role-001', 'perm-005');
+INSERT INTO ATH_ROLE_STATUS (STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION, SORT_ORDER, IS_DEFAULT, CREATED_BY)
+VALUES ('STAFF_RESIGNED', '퇴사', 'STAFF', 0, '퇴사 - 권한 사용 불가', 3, 0, 'SYSTEM')
+/
 
--- 6. 역할-권한 매핑 (USER)
-INSERT INTO auth_role_permissions (role_id, permission_id)
-VALUES ('role-002', 'perm-001');
+-- ============================================
+-- 3. 기본 역할 생성 (SYSTEM 테넌트)
+-- ============================================
+INSERT INTO ATH_ROLES (ROLE_ID, TENANT_ID, ROLE_NAME, DISPLAY_NAME, DESCRIPTION, PRIORITY, CREATED_BY)
+VALUES ('role-system-admin', 'SYSTEM', 'ADMIN', '시스템 관리자', '전체 시스템 관리 권한', 10, 'SYSTEM')
+/
 
+INSERT INTO ATH_ROLES (ROLE_ID, TENANT_ID, ROLE_NAME, DISPLAY_NAME, DESCRIPTION, PRIORITY, CREATED_BY)
+VALUES ('role-system-user', 'SYSTEM', 'USER', '일반 사용자', '기본 사용자 권한', 50, 'SYSTEM')
+/
+
+-- 기본 역할 생성 (SEJONG 테넌트)
+INSERT INTO ATH_ROLES (ROLE_ID, TENANT_ID, ROLE_NAME, DISPLAY_NAME, DESCRIPTION, PRIORITY, CREATED_BY)
+VALUES ('role-sejong-admin', 'SEJONG', 'ADMIN', '관리자', '테넌트 관리 권한', 10, 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLES (ROLE_ID, TENANT_ID, ROLE_NAME, DISPLAY_NAME, DESCRIPTION, PRIORITY, CREATED_BY)
+VALUES ('role-sejong-professor', 'SEJONG', 'PROFESSOR', '교수', '교수 권한', 20, 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLES (ROLE_ID, TENANT_ID, ROLE_NAME, DISPLAY_NAME, DESCRIPTION, PRIORITY, CREATED_BY)
+VALUES ('role-sejong-staff', 'SEJONG', 'STAFF', '직원', '직원 권한', 30, 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLES (ROLE_ID, TENANT_ID, ROLE_NAME, DISPLAY_NAME, DESCRIPTION, PRIORITY, CREATED_BY)
+VALUES ('role-sejong-student', 'SEJONG', 'STUDENT', '학생', '학생 권한', 40, 'SYSTEM')
+/
+
+-- ============================================
+-- 4. 기본 권한 생성 (SYSTEM 테넌트)
+-- ============================================
+-- USER 리소스 권한
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-user-read', 'SYSTEM', 'USER_READ', 'USER', 'READ', '사용자 조회 권한', 'SYSTEM')
+/
+
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-user-write', 'SYSTEM', 'USER_WRITE', 'USER', 'WRITE', '사용자 생성/수정 권한', 'SYSTEM')
+/
+
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-user-delete', 'SYSTEM', 'USER_DELETE', 'USER', 'DELETE', '사용자 삭제 권한', 'SYSTEM')
+/
+
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-user-manage', 'SYSTEM', 'USER_MANAGE', 'USER', 'MANAGE', '사용자 전체 관리 권한', 'SYSTEM')
+/
+
+-- ROLE 리소스 권한
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-role-read', 'SYSTEM', 'ROLE_READ', 'ROLE', 'READ', '역할 조회 권한', 'SYSTEM')
+/
+
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-role-manage', 'SYSTEM', 'ROLE_MANAGE', 'ROLE', 'MANAGE', '역할 관리 권한', 'SYSTEM')
+/
+
+-- TENANT 리소스 권한
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-tenant-read', 'SYSTEM', 'TENANT_READ', 'TENANT', 'READ', '테넌트 조회 권한', 'SYSTEM')
+/
+
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-tenant-manage', 'SYSTEM', 'TENANT_MANAGE', 'TENANT', 'MANAGE', '테넌트 관리 권한', 'SYSTEM')
+/
+
+-- SSO 리소스 권한
+INSERT INTO ATH_PERMISSIONS (PERMISSION_ID, TENANT_ID, PERMISSION_NAME, RESOURCE, ACTION, DESCRIPTION, CREATED_BY)
+VALUES ('perm-sso-config', 'SYSTEM', 'SSO_CONFIG', 'SSO', 'MANAGE', 'SSO 설정 권한', 'SYSTEM')
+/
+
+-- ============================================
+-- 5. 역할-권한 매핑 (ADMIN 역할에 모든 권한)
+-- ============================================
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-user-read', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-user-write', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-user-delete', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-user-manage', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-role-read', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-role-manage', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-tenant-read', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-tenant-manage', 'SYSTEM', 'SYSTEM')
+/
+
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-admin', 'perm-sso-config', 'SYSTEM', 'SYSTEM')
+/
+
+-- 일반 사용자 권한 (조회만)
+INSERT INTO ATH_ROLE_PERMISSIONS (ROLE_ID, PERMISSION_ID, TENANT_ID, GRANTED_BY)
+VALUES ('role-system-user', 'perm-user-read', 'SYSTEM', 'SYSTEM')
+/
+
+-- ============================================
+-- 6. SSO 설정
+-- ============================================
+INSERT INTO ATH_TENANT_SSO_CONFIG (TENANT_ID, SSO_TYPE, SSO_ENABLED)
+VALUES ('SYSTEM', 'INTERNAL', 1)
+/
+
+INSERT INTO ATH_TENANT_SSO_CONFIG (TENANT_ID, SSO_TYPE, SSO_ENABLED, RELAY_ENDPOINT, RELAY_TIMEOUT_MS, USER_SYNC_ENABLED, ROLE_MAPPING_ENABLED)
+VALUES ('SEJONG', 'RELAY', 1, 'sejong-server.sejong.ac.kr:9090', 5000, 1, 1)
+/
+
+-- ============================================
 -- 7. 기본 관리자 계정 생성 (password: admin123)
 -- BCrypt hash of 'admin123'
-INSERT INTO auth_users (
-    user_id, tenant_id, username, password,
-    email, full_name, status,
-    account_non_locked, credentials_non_expired, enabled,
-    created_by
+-- ============================================
+INSERT INTO ATH_USERS (
+    USER_ID, TENANT_ID, USERNAME, PASSWORD, EMAIL, FULL_NAME, STATUS,
+    ACCOUNT_NON_LOCKED, CREDENTIALS_NON_EXPIRED, ENABLED, CREATED_BY
 ) VALUES (
-    'user-admin-001', 'default', 'admin',
+    'user-admin-system', 'SYSTEM', 'admin',
     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
     'admin@lotecs.com', '시스템 관리자', 'ACTIVE',
-    1, 1, 1,
-    'SYSTEM'
-);
+    1, 1, 1, 'SYSTEM'
+)
+/
 
+INSERT INTO ATH_USERS (
+    USER_ID, TENANT_ID, USERNAME, PASSWORD, EMAIL, FULL_NAME, STATUS,
+    ACCOUNT_NON_LOCKED, CREDENTIALS_NON_EXPIRED, ENABLED, CREATED_BY
+) VALUES (
+    'user-admin-sejong', 'SEJONG', 'admin',
+    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    'admin@sejong.ac.kr', '세종대 관리자', 'ACTIVE',
+    1, 1, 1, 'SYSTEM'
+)
+/
+
+-- ============================================
 -- 8. 관리자에게 ADMIN 역할 부여
-INSERT INTO auth_user_roles (user_id, role_id, tenant_id, assigned_by)
-VALUES ('user-admin-001', 'role-001', 'default', 'SYSTEM');
+-- ============================================
+INSERT INTO ATH_USER_ROLES (USER_ID, ROLE_ID, TENANT_ID, STATUS_CODE, ASSIGNED_BY)
+VALUES ('user-admin-system', 'role-system-admin', 'SYSTEM', 'ACTIVE', 'SYSTEM')
+/
 
-COMMIT;
+INSERT INTO ATH_USER_ROLES (USER_ID, ROLE_ID, TENANT_ID, STATUS_CODE, ASSIGNED_BY)
+VALUES ('user-admin-sejong', 'role-sejong-admin', 'SEJONG', 'ACTIVE', 'SYSTEM')
+/
 
+COMMIT
+/
+
+-- ============================================
 -- Verify data
-SELECT 'SSO Configs' as category, COUNT(*) as count FROM auth_tenant_sso_config
-UNION ALL
-SELECT 'Permissions', COUNT(*) FROM auth_permissions
-UNION ALL
-SELECT 'Roles', COUNT(*) FROM auth_roles
-UNION ALL
-SELECT 'Users', COUNT(*) FROM auth_users;
+-- ============================================
+SELECT 'Tenants' AS CATEGORY, COUNT(*) AS COUNT FROM ATH_TENANT
+UNION ALL SELECT 'Role Status', COUNT(*) FROM ATH_ROLE_STATUS
+UNION ALL SELECT 'Roles', COUNT(*) FROM ATH_ROLES
+UNION ALL SELECT 'Permissions', COUNT(*) FROM ATH_PERMISSIONS
+UNION ALL SELECT 'Role-Permissions', COUNT(*) FROM ATH_ROLE_PERMISSIONS
+UNION ALL SELECT 'SSO Configs', COUNT(*) FROM ATH_TENANT_SSO_CONFIG
+UNION ALL SELECT 'Users', COUNT(*) FROM ATH_USERS
+UNION ALL SELECT 'User-Roles', COUNT(*) FROM ATH_USER_ROLES
+/
