@@ -1,0 +1,128 @@
+### Auth API Test
+### IntelliJ IDEA HTTP Client 또는 VS Code REST Client 에서 사용 가능
+
+### 환경 변수
+@baseUrl = http://localhost:8080
+@tenantId = SYSTEM
+
+
+### ===========================================
+### 로그인 API
+### ===========================================
+
+### 로그인 - 정상 케이스
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+X-Forwarded-For: 127.0.0.1
+
+{
+  "username": "admin",
+  "password": "admin123",
+  "tenantId": "{{tenantId}}"
+}
+
+> {%
+  client.global.set("accessToken", response.body.data.accessToken);
+  client.global.set("refreshToken", response.body.data.refreshToken);
+  client.global.set("userId", response.body.data.userId);
+%}
+
+
+### 로그인 - 잘못된 비밀번호
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "wrongpassword",
+  "tenantId": "{{tenantId}}"
+}
+
+
+### 로그인 - 필수값 누락
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "tenantId": "{{tenantId}}"
+}
+
+
+### ===========================================
+### 토큰 검증 API
+### ===========================================
+
+### 토큰 검증 - 정상 케이스
+POST {{baseUrl}}/auth/validate
+Content-Type: application/json
+
+{
+  "accessToken": "{{accessToken}}"
+}
+
+
+### 토큰 검증 - 수동 입력
+POST {{baseUrl}}/auth/validate
+Content-Type: application/json
+
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+
+
+### ===========================================
+### 토큰 갱신 API
+### ===========================================
+
+### 토큰 갱신 - 정상 케이스
+POST {{baseUrl}}/auth/refresh?refreshToken={{refreshToken}}
+Content-Type: application/json
+
+> {%
+  client.global.set("accessToken", response.body.data.accessToken);
+  client.global.set("refreshToken", response.body.data.refreshToken);
+%}
+
+
+### 토큰 갱신 - 수동 입력
+POST {{baseUrl}}/auth/refresh?refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+
+### ===========================================
+### 로그아웃 API
+### ===========================================
+
+### 로그아웃 - 정상 케이스
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "accessToken": "{{accessToken}}",
+  "userId": "{{userId}}"
+}
+
+
+### 로그아웃 - 수동 입력
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "accessToken": "your-access-token-here",
+  "userId": "user-id-here"
+}
+
+
+### ===========================================
+### SSO Admin API
+### ===========================================
+
+### SSO 설정 조회
+GET {{baseUrl}}/admin/sso/config/{{tenantId}}
+Content-Type: application/json
+
+
+### SSO 연결 테스트
+POST {{baseUrl}}/admin/sso/test?tenantId={{tenantId}}
+Content-Type: application/json
