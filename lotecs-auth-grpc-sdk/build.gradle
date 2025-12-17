@@ -1,32 +1,6 @@
-plugins {
-    id 'java-library'
-    id 'maven-publish'
-}
-
-group = 'lotecs.auth'
-version = '1.0.0-SNAPSHOT'
-
-ext {
-    springBootVersion = '3.5.5'
-    lombokVersion = '1.18.38'
-}
-
-repositories {
-    mavenLocal()
-    maven {
-        url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
-        credentials {
-            username = project.findProperty('nexusUsername') ?: ''
-            password = project.findProperty('nexusPassword') ?: ''
-        }
-    }
-    mavenCentral()
-}
+description = 'LOTECS Auth gRPC SDK for client applications'
 
 dependencies {
-    // LOTECS Dependencies BOM (버전 통합 관리)
-    api platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
-
     // gRPC API (Proto 생성 코드)
     api project(':lotecs-auth-grpc-api')
 
@@ -35,77 +9,4 @@ dependencies {
 
     // gRPC Client
     implementation 'net.devh:grpc-client-spring-boot-starter'
-
-    // Spring Boot AutoConfiguration
-    implementation 'org.springframework.boot:spring-boot-autoconfigure'
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
-
-    // Lombok
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-
-    // Test
-    testImplementation platform('lotecs.framework:lotecs-dependencies:1.0.0-SNAPSHOT')
-    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
-    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-    withSourcesJar()
-    withJavadocJar()
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['-parameters']
-}
-
-test {
-    useJUnitPlatform()
-    testLogging {
-        events "passed", "skipped", "failed"
-        exceptionFormat "full"
-    }
-}
-
-configurations.configureEach {
-    resolutionStrategy {
-        cacheChangingModulesFor(0, "seconds")
-        cacheDynamicVersionsFor(0, "seconds")
-    }
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'lotecs.auth'
-            artifactId = 'lotecs-auth-grpc-sdk'
-            from components.java
-        }
-    }
-    repositories {
-        maven {
-            name = 'nexusSnapshots'
-            url = uri(project.findProperty('nexus.snapshots.url') ?: 'https://nexus.lotecs.co.kr/repository/maven-snapshots/')
-            credentials {
-                username = project.findProperty('nexusUsername') ?: ''
-                password = project.findProperty('nexusPassword') ?: ''
-            }
-            allowInsecureProtocol = true
-        }
-        maven {
-            name = 'nexusReleases'
-            url = uri(project.findProperty('nexus.releases.url') ?: 'https://nexus.lotecs.co.kr/repository/maven-releases/')
-            credentials {
-                username = project.findProperty('nexusUsername') ?: ''
-                password = project.findProperty('nexusPassword') ?: ''
-            }
-            allowInsecureProtocol = true
-        }
-    }
 }

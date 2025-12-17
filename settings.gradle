@@ -1,3 +1,21 @@
+pluginManagement {
+    plugins {
+        id 'org.springframework.boot' version '3.5.5'
+        id 'io.spring.dependency-management' version '1.1.4'
+    }
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        maven {
+            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
+            credentials {
+                username = providers.gradleProperty('nexusUsername').getOrElse('admin')
+                password = providers.gradleProperty('nexusPassword').getOrElse('')
+            }
+        }
+    }
+}
+
 rootProject.name = 'lotecs-auth'
 
 include 'lotecs-auth-grpc-api'

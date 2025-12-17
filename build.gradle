@@ -1,28 +1,45 @@
-subprojects {
-    repositories {
-        mavenCentral()
-        mavenLocal()
+plugins {
+    id 'lotecs.library-conventions' version "${pluginVersion}" apply false
+}
+
+def libraryModules = [
+        'lotecs-auth-grpc-api',
+        'lotecs-auth-grpc-sdk'
+]
+
+description = 'LOTECS Auth Service'
+
+allprojects {
+    group = 'lotecs.auth'
+    version = '1.0.0-SNAPSHOT'
+}
+
+subprojects { subproject ->
+    apply plugin: 'java'
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
-    afterEvaluate {
-        if (plugins.hasPlugin('java')) {
-            java {
-                sourceCompatibility = JavaVersion.VERSION_21
-                targetCompatibility = JavaVersion.VERSION_21
-            }
-
-            tasks.withType(JavaCompile).configureEach {
-                options.encoding = 'UTF-8'
-                options.compilerArgs += ['-parameters']
-            }
-
-            test {
-                useJUnitPlatform()
-                testLogging {
-                    events "passed", "skipped", "failed"
-                    exceptionFormat "full"
-                }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
+            credentials {
+                username = project.findProperty('nexusUsername') ?: ''
+                password = project.findProperty('nexusPassword') ?: ''
             }
         }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-parameters']
+    }
+
+    if (libraryModules.contains(subproject.name)) {
+        apply plugin: 'lotecs.library-conventions'
     }
 }
