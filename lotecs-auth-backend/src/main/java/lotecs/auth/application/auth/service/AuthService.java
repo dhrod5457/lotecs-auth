@@ -14,10 +14,13 @@ import lotecs.auth.domain.sso.SsoProvider;
 import lotecs.auth.domain.sso.SsoType;
 import lotecs.auth.domain.sso.model.TenantSsoConfig;
 import lotecs.auth.domain.sso.repository.TenantSsoConfigRepository;
+import lotecs.auth.domain.user.model.Permission;
 import lotecs.auth.domain.user.model.Role;
 import lotecs.auth.domain.user.model.User;
 import lotecs.auth.domain.user.model.UserStatus;
 import lotecs.auth.domain.user.repository.UserRepository;
+import lotecs.auth.infrastructure.persistence.user.mapper.PermissionMapper;
+import lotecs.auth.infrastructure.persistence.user.mapper.RoleMapper;
 import lotecs.auth.infrastructure.sso.SsoProviderFactory;
 import lotecs.framework.common.jwt.model.JwtResult;
 import lotecs.framework.common.jwt.model.JwtTokenResponse;
@@ -27,7 +30,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -44,6 +49,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserDtoMapper userDtoMapper;
+    private final RoleMapper roleMapper;
+    private final PermissionMapper permissionMapper;
 
     /**
      * 로그인 처리
@@ -113,7 +120,38 @@ public class AuthService {
         if (user.getEmail() != null) {
             claims.put("email", user.getEmail());
         }
+
+        // authorities 클레임 추가 (사용자의 모든 권한)
+        List<String> authorities = buildAuthorities(user.getUserId());
+        claims.put("authorities", authorities);
+
+        log.debug("[AUTH] JWT 클레임 생성: userId={}, authorities={}", user.getUserId(), authorities);
+
         return claims;
+    }
+
+    /**
+     * 사용자의 모든 권한(authorities) 목록 조회
+     * Role -> Permission -> authority 문자열 변환
+     */
+    private List<String> buildAuthorities(String userId) {
+        List<String> authorities = new ArrayList<>();
+
+        // 사용자의 역할 목록 조회
+        List<Role> roles = roleMapper.findByUserId(userId);
+
+        for (Role role : roles) {
+            // 각 역할의 권한 목록 조회
+            List<Permission> permissions = permissionMapper.findByRoleId(role.getRoleId());
+            for (Permission permission : permissions) {
+                String authority = permission.toAuthority();
+                if (!authorities.contains(authority)) {
+                    authorities.add(authority);
+                }
+            }
+        }
+
+        return authorities;
     }
 
     /**
