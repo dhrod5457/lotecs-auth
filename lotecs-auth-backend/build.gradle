@@ -31,7 +31,7 @@ dependencies {
     // LOTECS Framework - 버전은 BOM에서 관리
     implementation 'lotecs.framework:lotecs-core'
     implementation 'lotecs.framework:lotecs-jwt-core'
-    implementation 'lotecs.framework:lotecs-jwt-web'
+    implementation 'lotecs.framework:jwks-api:2.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-jwt-redis'
     implementation 'lotecs.framework:lotecs-cache-spring-boot-starter'
     implementation 'lotecs.framework:lotecs-crypto-spring-boot-starter'
