@@ -33,15 +33,6 @@ protobuf {
     }
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs 'build/generated/source/proto/main/grpc'
-            srcDirs 'build/generated/source/proto/main/java'
-        }
-    }
-}
-
 java {
     withSourcesJar()
     withJavadocJar()
@@ -49,10 +40,6 @@ java {
 
 jar {
     enabled = true
-}
-
-tasks.named('sourcesJar') {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.withType(Javadoc).configureEach {
