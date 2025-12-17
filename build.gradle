@@ -1,5 +1,5 @@
 plugins {
-    id 'lotecs.library-conventions' version "${pluginVersion}" apply false
+    id 'lotecs.library-conventions' apply false
 }
 
 // library-conventions 플러그인을 적용할 모듈
@@ -21,18 +21,6 @@ subprojects { subproject ->
     java {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
-    }
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-        maven {
-            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
-            credentials {
-                username = project.findProperty('nexusUsername') ?: ''
-                password = project.findProperty('nexusPassword') ?: ''
-            }
-        }
     }
 
     tasks.withType(JavaCompile).configureEach {

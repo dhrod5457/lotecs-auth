@@ -13,18 +13,6 @@ java {
     }
 }
 
-repositories {
-    mavenLocal()
-    maven {
-        url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
-        credentials {
-            username = project.findProperty('nexusUsername') ?: ''
-            password = project.findProperty('nexusPassword') ?: ''
-        }
-    }
-    mavenCentral()
-}
-
 bootJar {
     enabled = true
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

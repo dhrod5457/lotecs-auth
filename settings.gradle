@@ -1,34 +1,12 @@
 pluginManagement {
-    plugins {
-        id 'org.springframework.boot' version '3.5.5'
-        id 'io.spring.dependency-management' version '1.1.4'
-    }
     repositories {
         mavenLocal()
         gradlePluginPortal()
-        maven {
-            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
-            credentials {
-                username = providers.gradleProperty('nexusUsername').getOrElse('admin')
-                password = providers.gradleProperty('nexusPassword').getOrElse('')
-            }
-        }
     }
 }
 
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
-    repositories {
-        mavenLocal()
-        maven {
-            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
-            credentials {
-                username = providers.gradleProperty('nexusUsername').getOrElse('admin')
-                password = providers.gradleProperty('nexusPassword').getOrElse('')
-            }
-        }
-        mavenCentral()
-    }
+plugins {
+    id 'lotecs.settings-conventions' version '1.0.0-SNAPSHOT'
 }
 
 rootProject.name = 'lotecs-auth'
