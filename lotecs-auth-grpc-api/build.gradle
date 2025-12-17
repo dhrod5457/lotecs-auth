@@ -1,25 +1,26 @@
 plugins {
     id 'java-library'
     id 'com.google.protobuf' version '0.9.4'
+    id 'maven-publish'
 }
 
-dependencies {
-    api 'io.grpc:grpc-stub:1.59.0'
-    api 'io.grpc:grpc-protobuf:1.59.0'
-    api 'javax.annotation:javax.annotation-api:1.3.2'
+description = 'LOTECS Auth gRPC API (Protocol Buffers)'
 
-    // For Java 9+ and Struct support
-    implementation 'com.google.protobuf:protobuf-java:3.25.0'
-    implementation 'com.google.protobuf:protobuf-java-util:3.25.0'
+dependencies {
+    // Protocol Buffers
+    api 'com.google.protobuf:protobuf-java:3.25.1'
+    api 'io.grpc:grpc-protobuf:1.63.0'
+    api 'io.grpc:grpc-stub:1.63.0'
+    api 'javax.annotation:javax.annotation-api:1.3.2'
 }
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.25.0'
+        artifact = 'com.google.protobuf:protoc:3.25.1'
     }
     plugins {
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.59.0'
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.63.0'
         }
     }
     generateProtoTasks {
@@ -34,6 +35,48 @@ sourceSets {
         java {
             srcDirs 'build/generated/source/proto/main/grpc'
             srcDirs 'build/generated/source/proto/main/java'
+        }
+    }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+jar {
+    enabled = true
+}
+
+tasks.named('sourcesJar') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(Javadoc).configureEach {
+    options {
+        encoding = 'UTF-8'
+        charSet = 'UTF-8'
+        addBooleanOption('Xdoclint:none', true)
+    }
+    failOnError = false
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'lotecs.auth'
+            artifactId = 'lotecs-auth-grpc-api'
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            name = 'nexus'
+            url = uri(project.findProperty('nexusUrl') ?: 'https://nexus.lotecs.co.kr/repository/maven-snapshots/')
+            credentials {
+                username = project.findProperty('nexusUsername') ?: ''
+                password = project.findProperty('nexusPassword') ?: ''
+            }
         }
     }
 }

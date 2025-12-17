@@ -1,11 +1,10 @@
 plugins {
     id 'java'
-    id 'java-library'
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
 }
 
-group = 'com.lotecs'
+group = 'lotecs.auth'
 version = '1.0.0-SNAPSHOT'
 
 java {
@@ -24,6 +23,15 @@ repositories {
         }
     }
     mavenCentral()
+}
+
+bootJar {
+    enabled = true
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+jar {
+    enabled = false
 }
 
 dependencies {
