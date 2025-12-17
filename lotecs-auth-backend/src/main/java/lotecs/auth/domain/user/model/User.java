@@ -157,6 +157,27 @@ public class User {
     }
 
     /**
+     * 역할 추가
+     */
+    public void addRole(Role role) {
+        if (this.roles == null) {
+            this.roles = new ArrayList<>();
+        }
+        if (!this.roles.contains(role)) {
+            this.roles.add(role);
+        }
+    }
+
+    /**
+     * 역할 제거
+     */
+    public void removeRole(Role role) {
+        if (this.roles != null) {
+            this.roles.remove(role);
+        }
+    }
+
+    /**
      * 삭제 여부 확인
      */
     public boolean isDeleted() {

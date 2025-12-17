@@ -136,4 +136,81 @@ public class AuthServiceClient {
             throw AuthGrpcException.fromStatusRuntimeException(e);
         }
     }
+
+    // Role Management APIs
+
+    public AssignRoleResponse assignRole(AssignRoleRequest request) {
+        try {
+            log.debug("gRPC assignRole request: userId={}, tenantId={}, roleId={}",
+                    request.getUserId(), request.getTenantId(), request.getRoleId());
+            com.lotecs.auth.grpc.AssignRoleResponse response = authServiceStub.assignRole(request.toProto());
+            return AssignRoleResponse.fromProto(response);
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC assignRole failed: {}", e.getStatus(), e);
+            throw AuthGrpcException.fromStatusRuntimeException(e);
+        }
+    }
+
+    public AssignRolesResponse assignRoles(AssignRolesRequest request) {
+        try {
+            log.debug("gRPC assignRoles request: userId={}, tenantId={}, roleCount={}",
+                    request.getUserId(), request.getTenantId(),
+                    request.getRoleIds() != null ? request.getRoleIds().size() : 0);
+            com.lotecs.auth.grpc.AssignRolesResponse response = authServiceStub.assignRoles(request.toProto());
+            return AssignRolesResponse.fromProto(response);
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC assignRoles failed: {}", e.getStatus(), e);
+            throw AuthGrpcException.fromStatusRuntimeException(e);
+        }
+    }
+
+    public RevokeRoleResponse revokeRole(RevokeRoleRequest request) {
+        try {
+            log.debug("gRPC revokeRole request: userId={}, tenantId={}, roleId={}",
+                    request.getUserId(), request.getTenantId(), request.getRoleId());
+            com.lotecs.auth.grpc.RevokeRoleResponse response = authServiceStub.revokeRole(request.toProto());
+            return RevokeRoleResponse.fromProto(response);
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC revokeRole failed: {}", e.getStatus(), e);
+            throw AuthGrpcException.fromStatusRuntimeException(e);
+        }
+    }
+
+    // User Status Management APIs
+
+    public LockUserResponse lockUser(LockUserRequest request) {
+        try {
+            log.debug("gRPC lockUser request: userId={}, tenantId={}, reason={}",
+                    request.getUserId(), request.getTenantId(), request.getReason());
+            com.lotecs.auth.grpc.LockUserResponse response = authServiceStub.lockUser(request.toProto());
+            return LockUserResponse.fromProto(response);
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC lockUser failed: {}", e.getStatus(), e);
+            throw AuthGrpcException.fromStatusRuntimeException(e);
+        }
+    }
+
+    public UnlockUserResponse unlockUser(UnlockUserRequest request) {
+        try {
+            log.debug("gRPC unlockUser request: userId={}, tenantId={}",
+                    request.getUserId(), request.getTenantId());
+            com.lotecs.auth.grpc.UnlockUserResponse response = authServiceStub.unlockUser(request.toProto());
+            return UnlockUserResponse.fromProto(response);
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC unlockUser failed: {}", e.getStatus(), e);
+            throw AuthGrpcException.fromStatusRuntimeException(e);
+        }
+    }
+
+    public ChangePasswordResponse changePassword(ChangePasswordRequest request) {
+        try {
+            log.debug("gRPC changePassword request: userId={}, tenantId={}",
+                    request.getUserId(), request.getTenantId());
+            com.lotecs.auth.grpc.ChangePasswordResponse response = authServiceStub.changePassword(request.toProto());
+            return ChangePasswordResponse.fromProto(response);
+        } catch (StatusRuntimeException e) {
+            log.error("gRPC changePassword failed: {}", e.getStatus(), e);
+            throw AuthGrpcException.fromStatusRuntimeException(e);
+        }
+    }
 }

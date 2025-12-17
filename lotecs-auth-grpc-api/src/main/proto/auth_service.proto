@@ -23,6 +23,16 @@ service AuthService {
   rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
 
   rpc CheckPermission(PermissionCheckRequest) returns (PermissionCheckResponse);
+
+  // Role Management
+  rpc AssignRole(AssignRoleRequest) returns (AssignRoleResponse);
+  rpc AssignRoles(AssignRolesRequest) returns (AssignRolesResponse);
+  rpc RevokeRole(RevokeRoleRequest) returns (RevokeRoleResponse);
+
+  // User Status Management
+  rpc LockUser(LockUserRequest) returns (LockUserResponse);
+  rpc UnlockUser(UnlockUserRequest) returns (UnlockUserResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 message LoginRequest {
@@ -146,6 +156,86 @@ message PermissionCheckRequest {
 
 message PermissionCheckResponse {
   bool has_permission = 1;
+}
+
+// Role Management Messages
+message AssignRoleRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string role_id = 3;
+  string status_code = 4;
+  string valid_from = 5;
+  string valid_until = 6;
+  string assigned_by = 7;
+}
+
+message AssignRoleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AssignRolesRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  repeated string role_ids = 3;
+  string status_code = 4;
+  string valid_from = 5;
+  string valid_until = 6;
+  string assigned_by = 7;
+}
+
+message AssignRolesResponse {
+  bool success = 1;
+  string message = 2;
+  int32 assigned_count = 3;
+}
+
+message RevokeRoleRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string role_id = 3;
+  string revoked_by = 4;
+}
+
+message RevokeRoleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// User Status Management Messages
+message LockUserRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string reason = 3;
+  string locked_by = 4;
+}
+
+message LockUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message UnlockUserRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string unlocked_by = 3;
+}
+
+message UnlockUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ChangePasswordRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+  string current_password = 3;
+  string new_password = 4;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
 }
 
 // Tenant Service

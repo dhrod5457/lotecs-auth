@@ -64,26 +64,12 @@ public class AuthService {
         log.info("[AUTH] SSO 설정: tenant={}, ssoType={}, ssoEnabled={}",
                 request.getTenantId(), ssoConfig.getSsoType(), ssoConfig.getSsoEnabled());
 
-        AuthResult authResult;
+        AuthResult authResult = switch (ssoConfig.getSsoType()) {
+            case INTERNAL -> authenticateInternal(request);
+            case RELAY, KEYCLOAK, LDAP, EXTERNAL -> authenticateExternal(request, ssoConfig);
+        };
 
         // 2. SSO Type에 따라 인증 분기
-        switch (ssoConfig.getSsoType()) {
-            case INTERNAL:
-                authResult = authenticateInternal(request);
-                break;
-
-            case RELAY:
-            case KEYCLOAK:
-            case LDAP:
-            case EXTERNAL:
-                authResult = authenticateExternal(request, ssoConfig);
-                break;
-
-            default:
-                log.error("[AUTH] 지원하지 않는 SSO 타입: {}", ssoConfig.getSsoType());
-                throw new UnsupportedOperationException("Unsupported SSO type: " + ssoConfig.getSsoType());
-        }
-
         User user = authResult.getUser();
 
         // 3. 로그인 정보 업데이트

@@ -16,6 +16,11 @@ public interface RoleMapper {
     Optional<Role> findById(@Param("roleId") String roleId);
 
     /**
+     * ID와 테넌트 ID로 역할 조회
+     */
+    Optional<Role> findByIdAndTenantId(@Param("roleId") String roleId, @Param("tenantId") String tenantId);
+
+    /**
      * 역할명으로 역할 조회
      */
     Optional<Role> findByRoleName(@Param("roleName") String roleName, @Param("tenantId") String tenantId);

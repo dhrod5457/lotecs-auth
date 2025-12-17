@@ -41,6 +41,16 @@
           AND DELETED_AT IS NULL
     </select>
 
+    <!-- ID와 테넌트 ID로 역할 조회 -->
+    <select id="findByIdAndTenantId" resultMap="roleResultMap">
+        SELECT
+            <include refid="roleColumns"/>
+        FROM ATH_ROLES
+        WHERE ROLE_ID = #{roleId}
+          AND TENANT_ID = #{tenantId}
+          AND DELETED_AT IS NULL
+    </select>
+
     <!-- 역할명으로 역할 조회 -->
     <select id="findByRoleName" resultMap="roleResultMap">
         SELECT

@@ -13,6 +13,11 @@ public interface RoleRepository {
     Optional<Role> findById(String roleId);
 
     /**
+     * 역할 ID와 테넌트 ID로 조회
+     */
+    Optional<Role> findByIdAndTenantId(String roleId, String tenantId);
+
+    /**
      * 테넌트 ID와 역할명으로 조회
      */
     Optional<Role> findByRoleName(String tenantId, String roleName);

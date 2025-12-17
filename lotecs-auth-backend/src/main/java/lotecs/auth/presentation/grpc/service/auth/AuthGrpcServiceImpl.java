@@ -371,6 +371,198 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
         }
     }
 
+    // Role Management APIs
+
+    /**
+     * 단일 역할 할당
+     */
+    @Override
+    public void assignRole(com.lotecs.auth.grpc.AssignRoleRequest request, StreamObserver<com.lotecs.auth.grpc.AssignRoleResponse> responseObserver) {
+        log.info("[gRPC] assignRole 호출: userId={}, roleId={}", request.getUserId(), request.getRoleId());
+
+        try {
+            userService.assignRole(
+                    request.getUserId(),
+                    request.getTenantId(),
+                    request.getRoleId(),
+                    request.getStatusCode(),
+                    request.getAssignedBy()
+            );
+
+            com.lotecs.auth.grpc.AssignRoleResponse grpcResponse = com.lotecs.auth.grpc.AssignRoleResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("Role assigned successfully")
+                    .build();
+
+            responseObserver.onNext(grpcResponse);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            log.error("[gRPC] assignRole 실패: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    /**
+     * 다중 역할 할당
+     */
+    @Override
+    public void assignRoles(com.lotecs.auth.grpc.AssignRolesRequest request, StreamObserver<com.lotecs.auth.grpc.AssignRolesResponse> responseObserver) {
+        log.info("[gRPC] assignRoles 호출: userId={}, roleCount={}", request.getUserId(), request.getRoleIdsCount());
+
+        try {
+            int assignedCount = userService.assignRoles(
+                    request.getUserId(),
+                    request.getTenantId(),
+                    request.getRoleIdsList(),
+                    request.getStatusCode(),
+                    request.getAssignedBy()
+            );
+
+            com.lotecs.auth.grpc.AssignRolesResponse grpcResponse = com.lotecs.auth.grpc.AssignRolesResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("Roles assigned successfully")
+                    .setAssignedCount(assignedCount)
+                    .build();
+
+            responseObserver.onNext(grpcResponse);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            log.error("[gRPC] assignRoles 실패: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    /**
+     * 역할 제거
+     */
+    @Override
+    public void revokeRole(com.lotecs.auth.grpc.RevokeRoleRequest request, StreamObserver<com.lotecs.auth.grpc.RevokeRoleResponse> responseObserver) {
+        log.info("[gRPC] revokeRole 호출: userId={}, roleId={}", request.getUserId(), request.getRoleId());
+
+        try {
+            userService.revokeRole(
+                    request.getUserId(),
+                    request.getTenantId(),
+                    request.getRoleId(),
+                    request.getRevokedBy()
+            );
+
+            com.lotecs.auth.grpc.RevokeRoleResponse grpcResponse = com.lotecs.auth.grpc.RevokeRoleResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("Role revoked successfully")
+                    .build();
+
+            responseObserver.onNext(grpcResponse);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            log.error("[gRPC] revokeRole 실패: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    // User Status Management APIs
+
+    /**
+     * 계정 잠금
+     */
+    @Override
+    public void lockUser(com.lotecs.auth.grpc.LockUserRequest request, StreamObserver<com.lotecs.auth.grpc.LockUserResponse> responseObserver) {
+        log.info("[gRPC] lockUser 호출: userId={}, reason={}", request.getUserId(), request.getReason());
+
+        try {
+            userService.lockUser(
+                    request.getUserId(),
+                    request.getTenantId(),
+                    request.getReason(),
+                    request.getLockedBy()
+            );
+
+            com.lotecs.auth.grpc.LockUserResponse grpcResponse = com.lotecs.auth.grpc.LockUserResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("User locked successfully")
+                    .build();
+
+            responseObserver.onNext(grpcResponse);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            log.error("[gRPC] lockUser 실패: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    /**
+     * 계정 잠금 해제
+     */
+    @Override
+    public void unlockUser(com.lotecs.auth.grpc.UnlockUserRequest request, StreamObserver<com.lotecs.auth.grpc.UnlockUserResponse> responseObserver) {
+        log.info("[gRPC] unlockUser 호출: userId={}", request.getUserId());
+
+        try {
+            userService.unlockUser(
+                    request.getUserId(),
+                    request.getTenantId(),
+                    request.getUnlockedBy()
+            );
+
+            com.lotecs.auth.grpc.UnlockUserResponse grpcResponse = com.lotecs.auth.grpc.UnlockUserResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("User unlocked successfully")
+                    .build();
+
+            responseObserver.onNext(grpcResponse);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            log.error("[gRPC] unlockUser 실패: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    /**
+     * 비밀번호 변경
+     */
+    @Override
+    public void changePassword(com.lotecs.auth.grpc.ChangePasswordRequest request, StreamObserver<com.lotecs.auth.grpc.ChangePasswordResponse> responseObserver) {
+        log.info("[gRPC] changePassword 호출: userId={}", request.getUserId());
+
+        try {
+            userService.changePassword(
+                    request.getUserId(),
+                    request.getTenantId(),
+                    request.getCurrentPassword(),
+                    request.getNewPassword()
+            );
+
+            com.lotecs.auth.grpc.ChangePasswordResponse grpcResponse = com.lotecs.auth.grpc.ChangePasswordResponse.newBuilder()
+                    .setSuccess(true)
+                    .setMessage("Password changed successfully")
+                    .build();
+
+            responseObserver.onNext(grpcResponse);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            log.error("[gRPC] changePassword 실패: {}", e.getMessage(), e);
+            responseObserver.onError(io.grpc.Status.INTERNAL
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
     /**
      * UserDto -> UserInfo 변환
      */

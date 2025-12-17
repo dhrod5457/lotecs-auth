@@ -24,6 +24,12 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
+    public Optional<Role> findByIdAndTenantId(String roleId, String tenantId) {
+        log.debug("Finding role by id and tenantId: roleId={}, tenantId={}", roleId, tenantId);
+        return roleMapper.findByIdAndTenantId(roleId, tenantId);
+    }
+
+    @Override
     public Optional<Role> findByRoleName(String tenantId, String roleName) {
         log.debug("Finding role by name: tenantId={}, roleName={}", tenantId, roleName);
         return roleMapper.findByRoleName(roleName, tenantId);

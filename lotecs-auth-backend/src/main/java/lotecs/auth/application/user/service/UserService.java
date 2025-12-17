@@ -169,4 +169,133 @@ public class UserService {
 
         log.info("[USER-014] 사용자 삭제 완료: userId={}", userId);
     }
+
+    /**
+     * 단일 역할 할당
+     */
+    @Transactional
+    public void assignRole(String userId, String tenantId, String roleId, String statusCode, String assignedBy) {
+        log.info("[USER-015] 역할 할당: userId={}, tenant={}, roleId={}", userId, tenantId, roleId);
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+
+        user.addRole(role);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("[USER-016] 역할 할당 완료: userId={}, roleId={}", userId, roleId);
+    }
+
+    /**
+     * 다중 역할 할당
+     */
+    @Transactional
+    public int assignRoles(String userId, String tenantId, List<String> roleIds, String statusCode, String assignedBy) {
+        log.info("[USER-017] 다중 역할 할당: userId={}, tenant={}, roleCount={}", userId, tenantId, roleIds.size());
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        int assignedCount = 0;
+        for (String roleId : roleIds) {
+            try {
+                Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
+                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+                user.addRole(role);
+                assignedCount++;
+            } catch (Exception e) {
+                log.warn("[USER-018] 역할 할당 실패: roleId={}, error={}", roleId, e.getMessage());
+            }
+        }
+
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("[USER-019] 다중 역할 할당 완료: userId={}, assignedCount={}", userId, assignedCount);
+        return assignedCount;
+    }
+
+    /**
+     * 역할 제거
+     */
+    @Transactional
+    public void revokeRole(String userId, String tenantId, String roleId, String revokedBy) {
+        log.info("[USER-020] 역할 제거: userId={}, tenant={}, roleId={}", userId, tenantId, roleId);
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+
+        user.removeRole(role);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("[USER-021] 역할 제거 완료: userId={}, roleId={}", userId, roleId);
+    }
+
+    /**
+     * 계정 잠금
+     */
+    @Transactional
+    public void lockUser(String userId, String tenantId, String reason, String lockedBy) {
+        log.info("[USER-022] 계정 잠금: userId={}, tenant={}, reason={}", userId, tenantId, reason);
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.setAccountNonLocked(false);
+        user.setStatus(UserStatus.LOCKED);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("[USER-023] 계정 잠금 완료: userId={}", userId);
+    }
+
+    /**
+     * 계정 잠금 해제
+     */
+    @Transactional
+    public void unlockUser(String userId, String tenantId, String unlockedBy) {
+        log.info("[USER-024] 계정 잠금 해제: userId={}, tenant={}", userId, tenantId);
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.setAccountNonLocked(true);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setFailedLoginAttempts(0);
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("[USER-025] 계정 잠금 해제 완료: userId={}", userId);
+    }
+
+    /**
+     * 비밀번호 변경
+     */
+    @Transactional
+    public void changePassword(String userId, String tenantId, String currentPassword, String newPassword) {
+        log.info("[USER-026] 비밀번호 변경: userId={}, tenant={}", userId, tenantId);
+
+        User user = userRepository.findByIdAndTenantId(userId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            log.warn("[USER-027] 현재 비밀번호 불일치: userId={}", userId);
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("[USER-028] 비밀번호 변경 완료: userId={}", userId);
+    }
 }
