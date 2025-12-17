@@ -5,6 +5,7 @@ plugins {
 // library-conventions 플러그인을 적용할 모듈
 // grpc-api는 protobuf 플러그인과 충돌하므로 별도 관리
 def libraryModules = [
+        'lotecs-auth-grpc-api',
         'lotecs-auth-grpc-sdk'
 ]
 

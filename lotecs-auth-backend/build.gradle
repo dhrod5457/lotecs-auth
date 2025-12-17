@@ -42,8 +42,7 @@ dependencies {
     implementation 'lotecs.framework:lotecs-web-spring-boot-starter'
     implementation 'lotecs.framework:lotecs-ratelimit-spring-boot-starter'
 
-    // gRPC API
-    implementation project(':lotecs-auth-grpc-api')
+    implementation "lotecs.auth:lotecs-auth-grpc-api:${pluginVersion}"
 
     // Relay gRPC SDK - 버전은 BOM에서 관리
     implementation 'lotecs.relay:relay-grpc-sdk'
