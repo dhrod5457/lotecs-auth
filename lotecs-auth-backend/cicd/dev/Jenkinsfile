@@ -1,0 +1,198 @@
+pipeline {
+    agent any
+
+    environment {
+        // Docker Registry (Nexus with SSL)
+        DOCKER_REGISTRY = 'nexus-docker.lotecs.co.kr'
+        IMAGE_NAME = 'lotecs-auth-backend'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+
+        // Credentials
+        NEXUS_CREDENTIALS_ID = 'nexus-credentials'
+        AUTH_DB_PASSWORD_CREDENTIALS_ID = 'AUTH_DB_PASSWORD'
+        AUTH_JWT_SECRET_CREDENTIALS_ID = 'AUTH_JWT_SECRET'
+        CRYPTO_MASTER_KEY_CREDENTIALS_ID = 'AUTH_CRYPTO_MASTER_KEY'
+
+        // Deploy Target (Server-57)
+        DEPLOY_HOST = '192.168.0.57'
+        DEPLOY_USER = 'lotecs'
+        SSH_CREDENTIALS_ID = 'server-57-ssh'
+
+        // Monorepo path
+        MODULE_PATH = 'lotecs-auth-backend'
+    }
+
+    stages {
+        // SCM 설정에서 자동으로 체크아웃됨 (Declarative: Checkout SCM)
+
+        stage('Build JAR') {
+            steps {
+                dir("${MODULE_PATH}") {
+                    withCredentials([usernamePassword(
+                        credentialsId: "${NEXUS_CREDENTIALS_ID}",
+                        usernameVariable: 'NEXUS_USERNAME',
+                        passwordVariable: 'NEXUS_PASSWORD'
+                    )]) {
+                        sh '''
+                            chmod +x gradlew
+                            ./gradlew clean bootJar --no-daemon --refresh-dependencies -x test \
+                                -PnexusUsername=$NEXUS_USERNAME \
+                                -PnexusPassword=$NEXUS_PASSWORD
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir("${MODULE_PATH}") {
+                    sh """
+                        docker build \
+                            --platform linux/amd64 \
+                            -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} \
+                            -t ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest \
+                            -f cicd/dev/Dockerfile .
+                    """
+                }
+            }
+        }
+
+        stage('Push to Registry') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: "${NEXUS_CREDENTIALS_ID}",
+                    usernameVariable: 'NEXUS_USER',
+                    passwordVariable: 'NEXUS_PASS'
+                )]) {
+                    sh """
+                        echo \$NEXUS_PASS | docker login ${DOCKER_REGISTRY} -u \$NEXUS_USER --password-stdin
+                        docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:latest
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Dev Server') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "${NEXUS_CREDENTIALS_ID}",
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASS'
+                    ),
+                    string(credentialsId: "${AUTH_DB_PASSWORD_CREDENTIALS_ID}", variable: 'AUTH_DB_PASSWORD'),
+                    string(credentialsId: "${AUTH_JWT_SECRET_CREDENTIALS_ID}", variable: 'AUTH_JWT_SECRET'),
+                    string(credentialsId: "${CRYPTO_MASTER_KEY_CREDENTIALS_ID}", variable: 'CRYPTO_MASTER_KEY')
+                ]) {
+                    // Credentials 디버깅 (앞 4글자만 출력)
+                    sh '''
+                        echo "[DEBUG] AUTH_DB_PASSWORD: $(echo $AUTH_DB_PASSWORD | cut -c1-4)***"
+                        echo "[DEBUG] AUTH_JWT_SECRET: $(echo $AUTH_JWT_SECRET | cut -c1-4)***"
+                    '''
+                    sshagent(credentials: ["${SSH_CREDENTIALS_ID}"]) {
+                        sh """
+                            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "
+                                cd /data/apps
+
+                                # Docker Registry 로그인
+                                echo '${NEXUS_PASS}' | docker login ${DOCKER_REGISTRY} -u '${NEXUS_USER}' --password-stdin
+
+                                # 환경변수 설정 (.env 파일 업데이트)
+                                grep -v '^AUTH_DB_PASSWORD=' .env > .env.tmp 2>/dev/null || true
+                                grep -v '^AUTH_JWT_SECRET=' .env.tmp > .env.tmp2 2>/dev/null || true
+                                grep -v '^AUTH_CRYPTO_MASTER_KEY=' .env.tmp2 > .env 2>/dev/null || true
+                                rm -f .env.tmp .env.tmp2
+                                echo 'AUTH_DB_PASSWORD=${AUTH_DB_PASSWORD}' >> .env
+                                echo 'AUTH_JWT_SECRET=${AUTH_JWT_SECRET}' >> .env
+                                echo 'AUTH_CRYPTO_MASTER_KEY=${CRYPTO_MASTER_KEY}' >> .env
+
+                                # Pull new images
+                                docker compose pull auth-backend-1 auth-backend-2
+
+                                # Rolling update - Instance 1
+                                docker compose stop auth-backend-1
+                                docker compose up -d auth-backend-1
+
+                                # Health check Instance 1 - liveness (max 60s, retry every 5s)
+                                i=0; while [ \\\$i -lt 12 ]; do
+                                    if curl -sf http://localhost:8100/actuator/health/liveness; then
+                                        echo 'Instance 1 is healthy'
+                                        break
+                                    fi
+                                    i=\\\$((i+1))
+                                    if [ \\\$i -eq 12 ]; then
+                                        echo 'Instance 1 health check failed after 60s'
+                                        exit 1
+                                    fi
+                                    echo \"Health check attempt \\\$i/12 failed, retrying in 5s...\"
+                                    sleep 5
+                                done
+
+                                # Rolling update - Instance 2
+                                docker compose stop auth-backend-2
+                                docker compose up -d auth-backend-2
+
+                                # Health check Instance 2 - liveness (max 60s, retry every 5s)
+                                i=0; while [ \\\$i -lt 12 ]; do
+                                    if curl -sf http://localhost:8101/actuator/health/liveness; then
+                                        echo 'Instance 2 is healthy'
+                                        break
+                                    fi
+                                    i=\\\$((i+1))
+                                    if [ \\\$i -eq 12 ]; then
+                                        echo 'Instance 2 health check failed after 60s'
+                                        exit 1
+                                    fi
+                                    echo \"Health check attempt \\\$i/12 failed, retrying in 5s...\"
+                                    sleep 5
+                                done
+
+                                echo 'Deploy completed successfully!'
+                            "
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                sh """
+                    docker rmi ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} || true
+                    docker image prune -f
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build and deploy successful: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
+            slackSend(
+                channel: '#jenkins-monitor',
+                color: 'good',
+                message: """*${IMAGE_NAME} DEV 배포 성공*
+                    |환경: DEV
+                    |이미지: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+                    |빌드: #${BUILD_NUMBER}
+                    |<${BUILD_URL}|빌드 로그 보기>""".stripMargin()
+            )
+        }
+        failure {
+            echo "Build or deploy failed!"
+            slackSend(
+                channel: '#jenkins-monitor',
+                color: 'danger',
+                message: """*${IMAGE_NAME} DEV 배포 실패*
+                    |환경: DEV
+                    |빌드: #${BUILD_NUMBER}
+                    |<${BUILD_URL}|빌드 로그 보기>""".stripMargin()
+            )
+        }
+        always {
+            cleanWs()
+        }
+    }
+}
