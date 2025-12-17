@@ -2,8 +2,8 @@
 ### IntelliJ IDEA HTTP Client 또는 VS Code REST Client 에서 사용 가능
 
 ### 환경 변수
-@baseUrl = http://localhost:8080
-@tenantId = SYSTEM
+@baseUrl = http://localhost:8000
+@tenantId = SEJONG
 
 
 ### ===========================================
@@ -22,9 +22,9 @@ X-Forwarded-For: 127.0.0.1
 }
 
 > {%
-  client.global.set("accessToken", response.body.data.accessToken);
-  client.global.set("refreshToken", response.body.data.refreshToken);
-  client.global.set("userId", response.body.data.userId);
+    client.global.set("accessToken", response.body.data.accessToken);
+    client.global.set("refreshToken", response.body.data.refreshToken);
+    client.global.set("userId", response.body.data.userId);
 %}
 
 
@@ -80,8 +80,8 @@ POST {{baseUrl}}/auth/refresh?refreshToken={{refreshToken}}
 Content-Type: application/json
 
 > {%
-  client.global.set("accessToken", response.body.data.accessToken);
-  client.global.set("refreshToken", response.body.data.refreshToken);
+    client.global.set("accessToken", response.body.data.accessToken);
+    client.global.set("refreshToken", response.body.data.refreshToken);
 %}
 
 

@@ -15,13 +15,13 @@ loki:
 
 lotecs:
   logging:
-    environment: local
+    environment: dev
     exporter:
       loki:
         url: ${LOKI_URL:http://192.168.0.57:3100}
 
   jwt:
-    secret: ${LOTECS_JWT_SECRET:lotecs-auth-local-secret-key-2025}
+    secret: ${LOTECS_JWT_SECRET:}
 
   crypto:
     key-management:

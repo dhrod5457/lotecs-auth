@@ -9,6 +9,7 @@ import lotecs.auth.application.auth.dto.LoginRequest;
 import lotecs.auth.application.auth.dto.LoginResponse;
 import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.auth.service.AuthService;
+import lotecs.auth.application.permission.service.PermissionAppService;
 import lotecs.auth.application.user.dto.CreateUserRequest;
 import lotecs.auth.application.user.dto.UpdateUserRequest;
 import lotecs.auth.application.user.dto.UserDto;
@@ -26,6 +27,7 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
     private final AuthService authService;
     private final UserService userService;
+    private final PermissionAppService permissionAppService;
 
     /**
      * 로그인
@@ -349,12 +351,15 @@ public class AuthGrpcServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
      */
     @Override
     public void checkPermission(com.lotecs.auth.grpc.PermissionCheckRequest request, StreamObserver<com.lotecs.auth.grpc.PermissionCheckResponse> responseObserver) {
-        log.debug("[gRPC] checkPermission 호출: userId={}, permission={}",
-                request.getUserId(), request.getPermissionCode());
+        log.debug("[gRPC] checkPermission 호출: userId={}, permission={}, tenantId={}",
+                request.getUserId(), request.getPermissionCode(), request.getTenantId());
 
         try {
-            // TODO: 권한 확인 로직 구현
-            boolean hasPermission = false;
+            boolean hasPermission = permissionAppService.hasPermission(
+                    request.getUserId(),
+                    request.getPermissionCode(),
+                    request.getTenantId()
+            );
 
             com.lotecs.auth.grpc.PermissionCheckResponse grpcResponse = com.lotecs.auth.grpc.PermissionCheckResponse.newBuilder()
                     .setHasPermission(hasPermission)

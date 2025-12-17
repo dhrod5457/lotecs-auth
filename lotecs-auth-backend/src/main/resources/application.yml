@@ -188,7 +188,7 @@ lotecs:
   # JWT 설정
   jwt:
     enabled: true
-    secret: ${LOTECS_JWT_SECRET:lotecs-auth-secret-key-change-in-production}
+    secret: ${LOTECS_JWT_SECRET:}
     access-token-validity-seconds: 900
     refresh-token-validity-seconds: 604800
     refresh-threshold-seconds: 300

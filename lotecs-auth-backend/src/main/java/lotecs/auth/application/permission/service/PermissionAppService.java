@@ -195,4 +195,80 @@ public class PermissionAppService {
 
         log.info("[PERM-023] 역할에서 권한 회수 완료: roleId={}, permissionId={}", roleId, permissionId);
     }
+
+    /**
+     * 사용자 권한 확인
+     *
+     * @param userId 사용자 ID
+     * @param permissionCode 권한 코드 (resource:action 형식 또는 permissionName)
+     * @param tenantId 테넌트 ID
+     * @return 권한 보유 여부
+     */
+    @Transactional(readOnly = true)
+    public boolean hasPermission(String userId, String permissionCode, String tenantId) {
+        log.debug("[PERM-024] 권한 확인: userId={}, permissionCode={}, tenantId={}", userId, permissionCode, tenantId);
+
+        // 사용자의 역할 목록 조회
+        List<lotecs.auth.domain.user.model.Role> roles = roleRepository.findByUserId(userId);
+
+        if (roles.isEmpty()) {
+            log.debug("[PERM-025] 사용자에게 할당된 역할 없음: userId={}", userId);
+            return false;
+        }
+
+        // 각 역할의 권한 조회 및 확인
+        for (lotecs.auth.domain.user.model.Role role : roles) {
+            List<Permission> permissions = permissionRepository.findByRoleId(role.getRoleId());
+
+            for (Permission permission : permissions) {
+                // permissionCode가 "resource:action" 형식인 경우
+                String authority = permission.toAuthority();
+                if (authority.equals(permissionCode)) {
+                    log.debug("[PERM-026] 권한 확인 성공 (authority): userId={}, permissionCode={}, roleId={}",
+                            userId, permissionCode, role.getRoleId());
+                    return true;
+                }
+
+                // permissionCode가 permissionName인 경우
+                if (permission.getPermissionName().equals(permissionCode)) {
+                    log.debug("[PERM-027] 권한 확인 성공 (permissionName): userId={}, permissionCode={}, roleId={}",
+                            userId, permissionCode, role.getRoleId());
+                    return true;
+                }
+            }
+        }
+
+        log.debug("[PERM-028] 권한 없음: userId={}, permissionCode={}", userId, permissionCode);
+        return false;
+    }
+
+    /**
+     * 사용자가 여러 권한 중 하나라도 보유하고 있는지 확인
+     */
+    @Transactional(readOnly = true)
+    public boolean hasAnyPermission(String userId, List<String> permissionCodes, String tenantId) {
+        log.debug("[PERM-029] 권한 확인 (OR): userId={}, permissionCodes={}, tenantId={}", userId, permissionCodes, tenantId);
+
+        for (String permissionCode : permissionCodes) {
+            if (hasPermission(userId, permissionCode, tenantId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 사용자가 모든 권한을 보유하고 있는지 확인
+     */
+    @Transactional(readOnly = true)
+    public boolean hasAllPermissions(String userId, List<String> permissionCodes, String tenantId) {
+        log.debug("[PERM-030] 권한 확인 (AND): userId={}, permissionCodes={}, tenantId={}", userId, permissionCodes, tenantId);
+
+        for (String permissionCode : permissionCodes) {
+            if (!hasPermission(userId, permissionCode, tenantId)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
