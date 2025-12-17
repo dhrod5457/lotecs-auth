@@ -615,3 +615,187 @@ message UserOrganizationInfo {
   string updated_by = 13;
   string updated_at = 14;
 }
+
+// Role Service (Role CRUD)
+service RoleService {
+  rpc GetRole(GetRoleRequest) returns (RoleResponse);
+  rpc GetRoleByName(GetRoleByNameRequest) returns (RoleResponse);
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+  rpc CreateRole(CreateRoleRequest) returns (RoleResponse);
+  rpc UpdateRole(UpdateRoleRequest) returns (RoleResponse);
+  rpc DeleteRole(DeleteRoleRequest) returns (DeleteRoleResponse);
+  rpc GetUserRoles(GetUserRolesRequest) returns (ListRolesResponse);
+}
+
+message GetRoleRequest {
+  string role_id = 1;
+  string tenant_id = 2;
+}
+
+message GetRoleByNameRequest {
+  string role_name = 1;
+  string tenant_id = 2;
+}
+
+message ListRolesRequest {
+  string tenant_id = 1;
+}
+
+message ListRolesResponse {
+  repeated RoleInfo roles = 1;
+}
+
+message CreateRoleRequest {
+  string tenant_id = 1;
+  string role_name = 2;
+  string display_name = 3;
+  string description = 4;
+  int32 priority = 5;
+  string created_by = 6;
+}
+
+message UpdateRoleRequest {
+  string role_id = 1;
+  string tenant_id = 2;
+  string display_name = 3;
+  string description = 4;
+  int32 priority = 5;
+  string updated_by = 6;
+}
+
+message DeleteRoleRequest {
+  string role_id = 1;
+  string tenant_id = 2;
+}
+
+message DeleteRoleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RoleResponse {
+  RoleInfo role = 1;
+  string error_message = 2;
+}
+
+message GetUserRolesRequest {
+  string user_id = 1;
+  string tenant_id = 2;
+}
+
+message RoleInfo {
+  string role_id = 1;
+  string tenant_id = 2;
+  string role_name = 3;
+  string display_name = 4;
+  string description = 5;
+  int32 priority = 6;
+  string created_by = 7;
+  string created_at = 8;
+  string updated_by = 9;
+  string updated_at = 10;
+}
+
+// Permission Service (Permission CRUD and Role-Permission mapping)
+service PermissionService {
+  rpc GetPermission(GetPermissionRequest) returns (PermissionResponse);
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+  rpc CreatePermission(CreatePermissionRequest) returns (PermissionResponse);
+  rpc UpdatePermission(UpdatePermissionRequest) returns (PermissionResponse);
+  rpc DeletePermission(DeletePermissionRequest) returns (DeletePermissionResponse);
+  rpc GetRolePermissions(GetRolePermissionsRequest) returns (ListPermissionsResponse);
+  rpc AssignPermissionsToRole(AssignPermissionsToRoleRequest) returns (AssignPermissionsToRoleResponse);
+  rpc RevokePermissionFromRole(RevokePermissionFromRoleRequest) returns (RevokePermissionFromRoleResponse);
+}
+
+message GetPermissionRequest {
+  string permission_id = 1;
+  string tenant_id = 2;
+}
+
+message ListPermissionsRequest {
+  string tenant_id = 1;
+}
+
+message ListPermissionsResponse {
+  repeated PermissionInfo permissions = 1;
+}
+
+message CreatePermissionRequest {
+  string tenant_id = 1;
+  string permission_code = 2;
+  string permission_name = 3;
+  string description = 4;
+  string resource_type = 5;
+  string action = 6;
+  string created_by = 7;
+}
+
+message UpdatePermissionRequest {
+  string permission_id = 1;
+  string tenant_id = 2;
+  string permission_name = 3;
+  string description = 4;
+  string resource_type = 5;
+  string action = 6;
+  string updated_by = 7;
+}
+
+message DeletePermissionRequest {
+  string permission_id = 1;
+  string tenant_id = 2;
+}
+
+message DeletePermissionResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PermissionResponse {
+  PermissionInfo permission = 1;
+  string error_message = 2;
+}
+
+message GetRolePermissionsRequest {
+  string role_id = 1;
+  string tenant_id = 2;
+}
+
+message AssignPermissionsToRoleRequest {
+  string role_id = 1;
+  string tenant_id = 2;
+  repeated string permission_ids = 3;
+  string assigned_by = 4;
+}
+
+message AssignPermissionsToRoleResponse {
+  bool success = 1;
+  string message = 2;
+  int32 assigned_count = 3;
+}
+
+message RevokePermissionFromRoleRequest {
+  string role_id = 1;
+  string tenant_id = 2;
+  string permission_id = 3;
+  string revoked_by = 4;
+}
+
+message RevokePermissionFromRoleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PermissionInfo {
+  string permission_id = 1;
+  string tenant_id = 2;
+  string permission_code = 3;
+  string permission_name = 4;
+  string description = 5;
+  string resource_type = 6;
+  string action = 7;
+  string created_by = 8;
+  string created_at = 9;
+  string updated_by = 10;
+  string updated_at = 11;
+}
