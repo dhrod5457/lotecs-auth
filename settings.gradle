@@ -16,6 +16,21 @@ pluginManagement {
     }
 }
 
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        mavenLocal()
+        maven {
+            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
+            credentials {
+                username = providers.gradleProperty('nexusUsername').getOrElse('admin')
+                password = providers.gradleProperty('nexusPassword').getOrElse('')
+            }
+        }
+        mavenCentral()
+    }
+}
+
 rootProject.name = 'lotecs-auth'
 
 include 'lotecs-auth-grpc-api'
