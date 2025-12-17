@@ -31,7 +31,7 @@ dependencies {
     // LOTECS Framework - 버전은 BOM에서 관리
     implementation 'lotecs.framework:lotecs-core'
     implementation 'lotecs.framework:lotecs-jwt-core'
-    implementation 'lotecs.framework:jwks-api:2.0.0-SNAPSHOT'
+    implementation 'lotecs.framework:jwks-api:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-jwt-redis'
     implementation 'lotecs.framework:lotecs-cache-spring-boot-starter'
     implementation 'lotecs.framework:lotecs-crypto-spring-boot-starter'
@@ -43,9 +43,6 @@ dependencies {
     implementation 'lotecs.framework:lotecs-ratelimit-spring-boot-starter'
 
     implementation "lotecs.auth:lotecs-auth-grpc-api:${pluginVersion}"
-
-    // Relay gRPC SDK - 버전은 BOM에서 관리
-    implementation 'lotecs.relay:relay-grpc-sdk'
 
     // LOTECS gRPC Core (StructConverter) - 버전은 BOM에서 관리
     implementation 'lotecs.framework:lotecs-grpc-core'
@@ -73,6 +70,11 @@ dependencies {
 
     // Apache Directory API (for LDAP SSO)
     implementation 'org.apache.directory.api:api-all:2.1.5'
+
+    // JJWT (for JWT_SSO Provider)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
     // Lombok - 버전은 BOM에서 관리
     compileOnly 'org.projectlombok:lombok'

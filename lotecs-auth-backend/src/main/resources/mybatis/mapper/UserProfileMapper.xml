@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lotecs.auth.infrastructure.persistence.user.mapper.UserProfileMapper">
+
+    <!-- UserProfile ResultMap -->
+    <resultMap id="userProfileResultMap" type="lotecs.auth.domain.user.model.UserProfile">
+        <id property="userId" column="USER_ID"/>
+        <id property="tenantId" column="TENANT_ID"/>
+        <result property="profileData" column="PROFILE_DATA"/>
+        <result property="source" column="SOURCE" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="sourceSystem" column="SOURCE_SYSTEM"/>
+        <result property="syncedAt" column="SYNCED_AT"/>
+        <result property="createdAt" column="CREATED_AT"/>
+        <result property="updatedAt" column="UPDATED_AT"/>
+    </resultMap>
+
+    <!-- 공통 컬럼 -->
+    <sql id="profileColumns">
+        USER_ID,
+        TENANT_ID,
+        PROFILE_DATA,
+        SOURCE,
+        SOURCE_SYSTEM,
+        SYNCED_AT,
+        CREATED_AT,
+        UPDATED_AT
+    </sql>
+
+    <!-- 사용자 ID와 테넌트 ID로 프로필 조회 -->
+    <select id="findByUserIdAndTenantId" resultMap="userProfileResultMap">
+        SELECT
+            <include refid="profileColumns"/>
+        FROM AUTH_USER_PROFILES
+        WHERE USER_ID = #{userId}
+          AND TENANT_ID = #{tenantId}
+    </select>
+
+    <!-- 프로필 등록 -->
+    <insert id="insert" parameterType="lotecs.auth.domain.user.model.UserProfile">
+        INSERT INTO AUTH_USER_PROFILES (
+            USER_ID,
+            TENANT_ID,
+            PROFILE_DATA,
+            SOURCE,
+            SOURCE_SYSTEM,
+            SYNCED_AT,
+            CREATED_AT,
+            UPDATED_AT
+        ) VALUES (
+            #{userId},
+            #{tenantId},
+            #{profileData},
+            #{source, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            #{sourceSystem},
+            #{syncedAt},
+            #{createdAt},
+            #{updatedAt}
+        )
+    </insert>
+
+    <!-- 프로필 수정 -->
+    <update id="update" parameterType="lotecs.auth.domain.user.model.UserProfile">
+        UPDATE AUTH_USER_PROFILES
+        SET
+            PROFILE_DATA = #{profileData},
+            SOURCE = #{source, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            SOURCE_SYSTEM = #{sourceSystem},
+            SYNCED_AT = #{syncedAt},
+            UPDATED_AT = #{updatedAt}
+        WHERE USER_ID = #{userId}
+          AND TENANT_ID = #{tenantId}
+    </update>
+
+    <!-- 프로필 삭제 -->
+    <delete id="deleteByUserIdAndTenantId">
+        DELETE FROM AUTH_USER_PROFILES
+        WHERE USER_ID = #{userId}
+          AND TENANT_ID = #{tenantId}
+    </delete>
+
+    <!-- 프로필 존재 여부 확인 -->
+    <select id="existsByUserIdAndTenantId" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM AUTH_USER_PROFILES
+        WHERE USER_ID = #{userId}
+          AND TENANT_ID = #{tenantId}
+    </select>
+
+</mapper>

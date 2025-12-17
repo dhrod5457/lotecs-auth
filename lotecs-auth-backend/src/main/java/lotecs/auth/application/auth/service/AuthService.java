@@ -73,7 +73,10 @@ public class AuthService {
 
         AuthResult authResult = switch (ssoConfig.getSsoType()) {
             case INTERNAL -> authenticateInternal(request);
-            case RELAY, KEYCLOAK, LDAP, EXTERNAL -> authenticateExternal(request, ssoConfig);
+            case KEYCLOAK, LDAP, JWT_SSO, CAS, REST_TOKEN, HTTP_FORM -> authenticateExternal(request, ssoConfig);
+            case RELAY, EXTERNAL -> throw new UnsupportedOperationException(
+                    "RELAY/EXTERNAL SSO type is deprecated. Please migrate to JWT_SSO, CAS, REST_TOKEN, or HTTP_FORM"
+            );
         };
 
         // 2. SSO Type에 따라 인증 분기

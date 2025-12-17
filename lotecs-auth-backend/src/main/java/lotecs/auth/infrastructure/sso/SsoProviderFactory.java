@@ -19,14 +19,20 @@ public class SsoProviderFactory {
         log.debug("Retrieving SSO provider for type: {}", ssoType);
 
         SsoProvider provider = switch (ssoType) {
-            case RELAY -> providers.get("relay");
             case KEYCLOAK -> providers.get("keycloak");
             case LDAP -> providers.get("ldap");
+            case JWT_SSO -> providers.get("jwt_sso");
+            case CAS -> providers.get("cas");
+            case REST_TOKEN -> providers.get("rest_token");
+            case HTTP_FORM -> providers.get("http_form");
             case INTERNAL -> throw new UnsupportedOperationException(
                     "INTERNAL SSO type is not supported by SsoProviderFactory"
             );
+            case RELAY -> throw new UnsupportedOperationException(
+                    "RELAY SSO type is deprecated. Please migrate to JWT_SSO, CAS, REST_TOKEN, or HTTP_FORM"
+            );
             case EXTERNAL -> throw new UnsupportedOperationException(
-                    "EXTERNAL SSO type is not supported by SsoProviderFactory"
+                    "EXTERNAL SSO type is deprecated and not supported"
             );
         };
 

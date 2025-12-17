@@ -7,15 +7,33 @@
         <id property="tenantId" column="TENANT_ID"/>
         <result property="ssoType" column="SSO_TYPE" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
         <result property="ssoEnabled" column="SSO_ENABLED"/>
-        <result property="relayEndpoint" column="RELAY_ENDPOINT"/>
-        <result property="relayTimeoutMs" column="RELAY_TIMEOUT_MS"/>
         <result property="ssoServerUrl" column="SSO_SERVER_URL"/>
-        <result property="ssoRealm" column="SSO_REALM"/>
         <result property="ssoClientId" column="SSO_CLIENT_ID"/>
         <result property="ssoClientSecret" column="SSO_CLIENT_SECRET"/>
+        <result property="ssoRealm" column="SSO_REALM"/>
+        <result property="jwtSecretKey" column="JWT_SECRET_KEY"/>
+        <result property="jwtAgentId" column="JWT_AGENT_ID"/>
+        <result property="jwtExpirationSeconds" column="JWT_EXPIRATION_SECONDS"/>
+        <result property="casValidateEndpoint" column="CAS_VALIDATE_ENDPOINT"/>
+        <result property="casServiceUrl" column="CAS_SERVICE_URL"/>
+        <result property="restTokenEndpoint" column="REST_TOKEN_ENDPOINT"/>
+        <result property="restConnectEndpoint" column="REST_CONNECT_ENDPOINT"/>
+        <result property="restCreateState" column="REST_CREATE_STATE"/>
+        <result property="restVerifyState" column="REST_VERIFY_STATE"/>
+        <result property="httpFormConfirmEndpoint" column="HTTP_FORM_CONFIRM_ENDPOINT"/>
+        <result property="httpFormIdParam" column="HTTP_FORM_ID_PARAM"/>
+        <result property="httpFormPasswordParam" column="HTTP_FORM_PASSWORD_PARAM"/>
+        <result property="httpFormEncodePassword" column="HTTP_FORM_ENCODE_PASSWORD"/>
+        <result property="loginEndpoint" column="LOGIN_ENDPOINT"/>
+        <result property="logoutEndpoint" column="LOGOUT_ENDPOINT"/>
+        <result property="readTimeoutMs" column="READ_TIMEOUT_MS"/>
         <result property="userSyncEnabled" column="USER_SYNC_ENABLED"/>
         <result property="roleMappingEnabled" column="ROLE_MAPPING_ENABLED"/>
         <result property="additionalConfig" column="ADDITIONAL_CONFIG"/>
+        <result property="relayEndpoint" column="RELAY_ENDPOINT"/>
+        <result property="relayTimeoutMs" column="RELAY_TIMEOUT_MS"/>
+        <result property="fallbackEnabled" column="FALLBACK_ENABLED"/>
+        <result property="fallbackPasswordRequired" column="FALLBACK_PASSWORD_REQUIRED"/>
         <result property="createdAt" column="CREATED_AT"/>
         <result property="updatedAt" column="UPDATED_AT"/>
     </resultMap>
@@ -25,15 +43,33 @@
         TENANT_ID,
         SSO_TYPE,
         SSO_ENABLED,
-        RELAY_ENDPOINT,
-        RELAY_TIMEOUT_MS,
         SSO_SERVER_URL,
-        SSO_REALM,
         SSO_CLIENT_ID,
         SSO_CLIENT_SECRET,
+        SSO_REALM,
+        JWT_SECRET_KEY,
+        JWT_AGENT_ID,
+        JWT_EXPIRATION_SECONDS,
+        CAS_VALIDATE_ENDPOINT,
+        CAS_SERVICE_URL,
+        REST_TOKEN_ENDPOINT,
+        REST_CONNECT_ENDPOINT,
+        REST_CREATE_STATE,
+        REST_VERIFY_STATE,
+        HTTP_FORM_CONFIRM_ENDPOINT,
+        HTTP_FORM_ID_PARAM,
+        HTTP_FORM_PASSWORD_PARAM,
+        HTTP_FORM_ENCODE_PASSWORD,
+        LOGIN_ENDPOINT,
+        LOGOUT_ENDPOINT,
+        READ_TIMEOUT_MS,
         USER_SYNC_ENABLED,
         ROLE_MAPPING_ENABLED,
         ADDITIONAL_CONFIG,
+        RELAY_ENDPOINT,
+        RELAY_TIMEOUT_MS,
+        FALLBACK_ENABLED,
+        FALLBACK_PASSWORD_REQUIRED,
         CREATED_AT,
         UPDATED_AT
     </sql>
@@ -52,30 +88,66 @@
             TENANT_ID,
             SSO_TYPE,
             SSO_ENABLED,
-            RELAY_ENDPOINT,
-            RELAY_TIMEOUT_MS,
             SSO_SERVER_URL,
-            SSO_REALM,
             SSO_CLIENT_ID,
             SSO_CLIENT_SECRET,
+            SSO_REALM,
+            JWT_SECRET_KEY,
+            JWT_AGENT_ID,
+            JWT_EXPIRATION_SECONDS,
+            CAS_VALIDATE_ENDPOINT,
+            CAS_SERVICE_URL,
+            REST_TOKEN_ENDPOINT,
+            REST_CONNECT_ENDPOINT,
+            REST_CREATE_STATE,
+            REST_VERIFY_STATE,
+            HTTP_FORM_CONFIRM_ENDPOINT,
+            HTTP_FORM_ID_PARAM,
+            HTTP_FORM_PASSWORD_PARAM,
+            HTTP_FORM_ENCODE_PASSWORD,
+            LOGIN_ENDPOINT,
+            LOGOUT_ENDPOINT,
+            READ_TIMEOUT_MS,
             USER_SYNC_ENABLED,
             ROLE_MAPPING_ENABLED,
             ADDITIONAL_CONFIG,
+            RELAY_ENDPOINT,
+            RELAY_TIMEOUT_MS,
+            FALLBACK_ENABLED,
+            FALLBACK_PASSWORD_REQUIRED,
             CREATED_AT,
             UPDATED_AT
         ) VALUES (
             #{tenantId},
             #{ssoType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
             #{ssoEnabled},
-            #{relayEndpoint},
-            #{relayTimeoutMs},
             #{ssoServerUrl},
-            #{ssoRealm},
             #{ssoClientId},
             #{ssoClientSecret},
+            #{ssoRealm},
+            #{jwtSecretKey},
+            #{jwtAgentId},
+            #{jwtExpirationSeconds},
+            #{casValidateEndpoint},
+            #{casServiceUrl},
+            #{restTokenEndpoint},
+            #{restConnectEndpoint},
+            #{restCreateState},
+            #{restVerifyState},
+            #{httpFormConfirmEndpoint},
+            #{httpFormIdParam},
+            #{httpFormPasswordParam},
+            #{httpFormEncodePassword},
+            #{loginEndpoint},
+            #{logoutEndpoint},
+            #{readTimeoutMs},
             #{userSyncEnabled},
             #{roleMappingEnabled},
             #{additionalConfig},
+            #{relayEndpoint},
+            #{relayTimeoutMs},
+            #{fallbackEnabled},
+            #{fallbackPasswordRequired},
             #{createdAt},
             #{updatedAt}
         )
@@ -87,15 +159,33 @@
         SET
             SSO_TYPE = #{ssoType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
             SSO_ENABLED = #{ssoEnabled},
-            RELAY_ENDPOINT = #{relayEndpoint},
-            RELAY_TIMEOUT_MS = #{relayTimeoutMs},
             SSO_SERVER_URL = #{ssoServerUrl},
-            SSO_REALM = #{ssoRealm},
             SSO_CLIENT_ID = #{ssoClientId},
             SSO_CLIENT_SECRET = #{ssoClientSecret},
+            SSO_REALM = #{ssoRealm},
+            JWT_SECRET_KEY = #{jwtSecretKey},
+            JWT_AGENT_ID = #{jwtAgentId},
+            JWT_EXPIRATION_SECONDS = #{jwtExpirationSeconds},
+            CAS_VALIDATE_ENDPOINT = #{casValidateEndpoint},
+            CAS_SERVICE_URL = #{casServiceUrl},
+            REST_TOKEN_ENDPOINT = #{restTokenEndpoint},
+            REST_CONNECT_ENDPOINT = #{restConnectEndpoint},
+            REST_CREATE_STATE = #{restCreateState},
+            REST_VERIFY_STATE = #{restVerifyState},
+            HTTP_FORM_CONFIRM_ENDPOINT = #{httpFormConfirmEndpoint},
+            HTTP_FORM_ID_PARAM = #{httpFormIdParam},
+            HTTP_FORM_PASSWORD_PARAM = #{httpFormPasswordParam},
+            HTTP_FORM_ENCODE_PASSWORD = #{httpFormEncodePassword},
+            LOGIN_ENDPOINT = #{loginEndpoint},
+            LOGOUT_ENDPOINT = #{logoutEndpoint},
+            READ_TIMEOUT_MS = #{readTimeoutMs},
             USER_SYNC_ENABLED = #{userSyncEnabled},
             ROLE_MAPPING_ENABLED = #{roleMappingEnabled},
             ADDITIONAL_CONFIG = #{additionalConfig},
+            RELAY_ENDPOINT = #{relayEndpoint},
+            RELAY_TIMEOUT_MS = #{relayTimeoutMs},
+            FALLBACK_ENABLED = #{fallbackEnabled},
+            FALLBACK_PASSWORD_REQUIRED = #{fallbackPasswordRequired},
             UPDATED_AT = #{updatedAt}
         WHERE TENANT_ID = #{tenantId}
     </update>

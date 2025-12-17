@@ -2,8 +2,14 @@ package lotecs.auth.domain.sso;
 
 public enum SsoType {
     INTERNAL,
-    RELAY,
     KEYCLOAK,
     LDAP,
+    JWT_SSO,
+    CAS,
+    REST_TOKEN,
+    HTTP_FORM,
+    @Deprecated
+    RELAY,
+    @Deprecated
     EXTERNAL
 }

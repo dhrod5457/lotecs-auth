@@ -9,10 +9,11 @@
 3. [의존성 추가](#의존성-추가)
 4. [설정](#설정)
 5. [JWT 인증 연동](#jwt-인증-연동)
-6. [gRPC 클라이언트 사용](#grpc-클라이언트-사용)
-7. [권한 체크](#권한-체크)
-8. [멀티테넌시](#멀티테넌시)
-9. [트러블슈팅](#트러블슈팅)
+6. [SSO 연동](#sso-연동)
+7. [gRPC 클라이언트 사용](#grpc-클라이언트-사용)
+8. [권한 체크](#권한-체크)
+9. [멀티테넌시](#멀티테넌시)
+10. [트러블슈팅](#트러블슈팅)
 
 ---
 
@@ -308,6 +309,265 @@ lotecs:
           - /health
           - /actuator/**
 ```
+
+---
+
+## SSO 연동
+
+LOTECS Auth는 다양한 SSO(Single Sign-On) 프로토콜을 지원한다. 테넌트별로 SSO 설정을 다르게 구성할 수 있다.
+
+### 지원 SSO 유형
+
+| SSO 유형 | 설명 | 사용 사례 |
+|----------|------|-----------|
+| INTERNAL | 내부 인증 (DB 기반) | 기본 인증, SSO 없이 사용 시 |
+| KEYCLOAK | Keycloak OIDC | Keycloak 서버 연동 |
+| LDAP | LDAP/Active Directory | 기업 AD 연동 |
+| JWT_SSO | JWT 토큰 기반 SSO | 외부 시스템 JWT 토큰 검증 |
+| CAS | CAS 프로토콜 | 대학교 CAS 서버 연동 |
+| REST_TOKEN | REST API 토큰 인증 | 시스템 토큰 + 사용자 검증 방식 |
+| HTTP_FORM | HTTP Form 기반 인증 | GET 요청 기반 SSO |
+
+### SSO 설정 구조
+
+`ATH_TENANT_SSO_CONFIG` 테이블에서 테넌트별 SSO 설정을 관리한다.
+
+```java
+TenantSsoConfig ssoConfig = TenantSsoConfig.builder()
+    .tenantId("TENANT_001")
+    .ssoType(SsoType.JWT_SSO)
+    .ssoEnabled(true)
+    .ssoServerUrl("https://sso.example.com")
+    // SSO 유형별 추가 설정
+    .build();
+```
+
+### SSO 유형별 설정
+
+#### INTERNAL (기본)
+
+내부 DB 인증을 사용하며, SSO 관련 설정이 필요 없다.
+
+```yaml
+# application.yml 별도 설정 불필요
+```
+
+#### KEYCLOAK
+
+```java
+TenantSsoConfig.builder()
+    .ssoType(SsoType.KEYCLOAK)
+    .ssoEnabled(true)
+    .ssoServerUrl("https://keycloak.example.com")
+    .ssoClientId("my-client")
+    .ssoClientSecret("client-secret")
+    .ssoRealm("my-realm")
+    .build();
+```
+
+| 필드 | 설명 | 필수 |
+|------|------|------|
+| ssoServerUrl | Keycloak 서버 URL | O |
+| ssoClientId | 클라이언트 ID | O |
+| ssoClientSecret | 클라이언트 시크릿 | O |
+| ssoRealm | Realm 이름 | O |
+
+#### JWT_SSO
+
+외부 시스템에서 발급한 JWT 토큰을 검증한다.
+
+```java
+TenantSsoConfig.builder()
+    .ssoType(SsoType.JWT_SSO)
+    .ssoEnabled(true)
+    .ssoServerUrl("https://sso.example.com")
+    .jwtSecretKey("your-secret-key-min-32-chars")
+    .jwtAgentId("agent-001")
+    .jwtExpirationSeconds(3600)
+    .loginEndpoint("/sso/login")
+    .logoutEndpoint("/sso/logout")
+    .build();
+```
+
+| 필드 | 설명 | 필수 |
+|------|------|------|
+| jwtSecretKey | JWT 서명 키 (최소 32자) | O |
+| jwtAgentId | 에이전트 ID | - |
+| jwtExpirationSeconds | 토큰 유효기간 (초) | - |
+| loginEndpoint | 로그인 엔드포인트 | - |
+| logoutEndpoint | 로그아웃 엔드포인트 | - |
+
+#### CAS
+
+CAS 프로토콜 기반 인증을 제공한다.
+
+```java
+TenantSsoConfig.builder()
+    .ssoType(SsoType.CAS)
+    .ssoEnabled(true)
+    .ssoServerUrl("https://cas.example.edu")
+    .casValidateEndpoint("/serviceValidate")
+    .casServiceUrl("https://myapp.example.com/callback")
+    .loginEndpoint("/login")
+    .logoutEndpoint("/logout")
+    .readTimeoutMs(5000)
+    .build();
+```
+
+| 필드 | 설명 | 필수 |
+|------|------|------|
+| ssoServerUrl | CAS 서버 URL | O |
+| casValidateEndpoint | 티켓 검증 엔드포인트 | O |
+| casServiceUrl | 서비스 콜백 URL | O |
+| loginEndpoint | 로그인 엔드포인트 | - |
+| logoutEndpoint | 로그아웃 엔드포인트 | - |
+| readTimeoutMs | HTTP 타임아웃 (ms) | - |
+
+**CAS 인증 흐름**:
+```
+1. 사용자 -> 서비스: 접근 요청
+2. 서비스 -> CAS: 로그인 페이지 리다이렉트
+3. 사용자 -> CAS: 로그인
+4. CAS -> 서비스: 서비스 티켓과 함께 콜백
+5. 서비스 -> CAS: 티켓 검증 (serviceValidate)
+6. CAS -> 서비스: 사용자 정보 (XML)
+```
+
+#### REST_TOKEN
+
+시스템 토큰을 획득한 후 사용자 검증을 수행하는 방식이다.
+
+```java
+TenantSsoConfig.builder()
+    .ssoType(SsoType.REST_TOKEN)
+    .ssoEnabled(true)
+    .ssoServerUrl("https://api.example.com")
+    .ssoClientId("client-id")
+    .ssoClientSecret("client-secret")
+    .restTokenEndpoint("/oauth/token")
+    .restConnectEndpoint("/api/user/verify")
+    .restCreateState("CREATE_STATE_VALUE")
+    .restVerifyState("VERIFY_STATE_VALUE")
+    .readTimeoutMs(10000)
+    .additionalConfig("""
+        {
+            "userDivisionMapping": {
+                "A": "STUDENT",
+                "B": "STAFF"
+            },
+            "userDivisionPrefix": {
+                "STUDENT": "S_",
+                "STAFF": "E_"
+            }
+        }
+        """)
+    .build();
+```
+
+| 필드 | 설명 | 필수 |
+|------|------|------|
+| ssoServerUrl | API 서버 URL | O |
+| ssoClientId | 클라이언트 ID | O |
+| ssoClientSecret | 클라이언트 시크릿 | O |
+| restTokenEndpoint | 토큰 발급 엔드포인트 | O |
+| restConnectEndpoint | 사용자 검증 엔드포인트 | O |
+| restCreateState | 토큰 요청 상태값 | - |
+| restVerifyState | 검증 요청 상태값 | - |
+| additionalConfig | 추가 설정 (JSON) | - |
+
+**REST_TOKEN 인증 흐름**:
+```
+1. 서비스 -> SSO서버: 시스템 토큰 요청 (client credentials)
+2. SSO서버 -> 서비스: 시스템 토큰 발급
+3. 서비스 -> SSO서버: 사용자 검증 요청 (시스템 토큰 + 사용자 정보)
+4. SSO서버 -> 서비스: 검증 결과 및 사용자 정보
+```
+
+#### HTTP_FORM
+
+HTTP GET 요청을 통한 폼 기반 인증이다.
+
+```java
+TenantSsoConfig.builder()
+    .ssoType(SsoType.HTTP_FORM)
+    .ssoEnabled(true)
+    .ssoServerUrl("https://auth.example.com")
+    .httpFormConfirmEndpoint("/confirm")
+    .httpFormIdParam("userId")
+    .httpFormPasswordParam("userPw")
+    .httpFormEncodePassword(true)
+    .readTimeoutMs(5000)
+    .build();
+```
+
+| 필드 | 설명 | 필수 |
+|------|------|------|
+| ssoServerUrl | 인증 서버 URL | O |
+| httpFormConfirmEndpoint | 인증 확인 엔드포인트 | O |
+| httpFormIdParam | 사용자 ID 파라미터명 | O |
+| httpFormPasswordParam | 비밀번호 파라미터명 | O |
+| httpFormEncodePassword | 비밀번호 인코딩 여부 | - |
+| readTimeoutMs | HTTP 타임아웃 (ms) | - |
+
+### Fallback 인증
+
+SSO 서버 장애 시 내부 인증으로 폴백할 수 있다.
+
+```java
+TenantSsoConfig.builder()
+    .ssoType(SsoType.JWT_SSO)
+    .ssoEnabled(true)
+    // ... SSO 설정 ...
+    .fallbackEnabled(true)           // Fallback 활성화
+    .fallbackPasswordRequired(true)  // 비밀번호 필수 여부
+    .build();
+```
+
+| 필드 | 설명 | 기본값 |
+|------|------|--------|
+| fallbackEnabled | Fallback 활성화 여부 | false |
+| fallbackPasswordRequired | Fallback 시 비밀번호 필수 | true |
+
+**Fallback 동작**:
+1. SSO 인증 시도
+2. SSO 실패 또는 타임아웃 발생
+3. `fallbackEnabled=true`면 내부 DB 인증 시도
+4. `fallbackPasswordRequired=true`면 비밀번호 검증, false면 사용자 존재 여부만 확인
+
+### SSO 인증 API
+
+#### 로그인 요청
+
+```http
+POST /auth/login HTTP/1.1
+Content-Type: application/json
+X-Tenant-Id: TENANT_001
+
+{
+    "username": "user@example.com",
+    "password": "password123",
+    "ssoToken": "external-sso-token"  // JWT_SSO, CAS 등에서 사용
+}
+```
+
+#### 응답
+
+```json
+{
+    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIs...",
+    "tokenType": "Bearer",
+    "expiresIn": 900
+}
+```
+
+### SSO 연동 시 주의사항
+
+1. **비밀키 관리**: `jwtSecretKey`, `ssoClientSecret` 등은 환경변수로 관리
+2. **타임아웃 설정**: 외부 SSO 서버 응답 지연을 고려하여 적절한 타임아웃 설정
+3. **Fallback 전략**: 중요 서비스는 `fallbackEnabled=true` 권장
+4. **사용자 동기화**: `userSyncEnabled=true` 설정 시 SSO 사용자 정보 자동 동기화
+5. **역할 매핑**: `roleMappingEnabled=true` 설정 시 SSO 역할을 내부 역할에 매핑
 
 ---
 
