@@ -7,7 +7,7 @@
         <id property="permissionId" column="PERMISSION_ID"/>
         <result property="tenantId" column="TENANT_ID"/>
         <result property="permissionName" column="PERMISSION_NAME"/>
-        <result property="resource" column="RESOURCE"/>
+        <result property="resource" column="RESOURCE_NAME"/>
         <result property="action" column="ACTION"/>
         <result property="description" column="DESCRIPTION"/>
         <result property="createdBy" column="CREATED_BY"/>
@@ -22,7 +22,7 @@
         PERMISSION_ID,
         TENANT_ID,
         PERMISSION_NAME,
-        RESOURCE,
+        RESOURCE_NAME,
         ACTION,
         DESCRIPTION,
         CREATED_BY,
@@ -56,7 +56,7 @@
         SELECT
             <include refid="permissionColumns"/>
         FROM ATH_PERMISSIONS
-        WHERE RESOURCE = #{resource}
+        WHERE RESOURCE_NAME = #{resource}
           AND ACTION = #{action}
           AND TENANT_ID = #{tenantId}
           AND DELETED_AT IS NULL
@@ -69,7 +69,7 @@
         FROM ATH_PERMISSIONS
         WHERE TENANT_ID = #{tenantId}
           AND DELETED_AT IS NULL
-        ORDER BY RESOURCE ASC, ACTION ASC
+        ORDER BY RESOURCE_NAME ASC, ACTION ASC
     </select>
 
     <!-- 역할 ID로 권한 목록 조회 -->
@@ -78,7 +78,7 @@
             P.PERMISSION_ID,
             P.TENANT_ID,
             P.PERMISSION_NAME,
-            P.RESOURCE,
+            P.RESOURCE_NAME,
             P.ACTION,
             P.DESCRIPTION,
             P.CREATED_BY,
@@ -90,7 +90,7 @@
         INNER JOIN ATH_ROLE_PERMISSIONS RP ON P.PERMISSION_ID = RP.PERMISSION_ID
         WHERE RP.ROLE_ID = #{roleId}
           AND P.DELETED_AT IS NULL
-        ORDER BY P.RESOURCE ASC, P.ACTION ASC
+        ORDER BY P.RESOURCE_NAME ASC, P.ACTION ASC
     </select>
 
     <!-- 권한 등록 -->
@@ -99,7 +99,7 @@
             PERMISSION_ID,
             TENANT_ID,
             PERMISSION_NAME,
-            RESOURCE,
+            RESOURCE_NAME,
             ACTION,
             DESCRIPTION,
             CREATED_BY,

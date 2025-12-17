@@ -1,0 +1,19 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+        maven {
+            url 'https://nexus.lotecs.co.kr/repository/maven-snapshots/'
+            credentials {
+                username = providers.gradleProperty('nexusUsername').getOrElse('')
+                password = providers.gradleProperty('nexusPassword').getOrElse('')
+            }
+        }
+    }
+}
+
+plugins {
+    id 'lotecs.settings-conventions' version '1.0.0-SNAPSHOT'
+}
+
+rootProject.name = 'lotecs-auth-backend'

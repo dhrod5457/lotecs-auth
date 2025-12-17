@@ -18,7 +18,7 @@ spring:
 
   datasource:
     driver-class-name: oracle.jdbc.driver.OracleDriver
-    url: jdbc:oracle:thin:@//192.168.0.57:1521/xepdb1
+    url: jdbc:oracle:thin:@//192.168.0.37:1521/xepdb1
     username: lotecs_auth
     password: ${AUTH_DB_PASSWORD:lotecs9240}
     hikari:
@@ -54,8 +54,8 @@ mybatis:
     lazy-loading-enabled: false
     default-fetch-size: 100
     default-statement-timeout: 30
-  configuration-properties:
-    jdbcTypeForNull: 'NULL'
+    jdbc-type-for-null: NULL
+    
 
 lotecs:
   # Util 설정
@@ -281,15 +281,11 @@ lotecs:
       timeout: 3000
       bucket-expiration-minutes: 10
 
-  # MyBatis 프레임워크 설정
+  # MyBatis 프레임워크 설정 (LOTECS 특화)
   mybatis:
     naming-strategy: CAMEL_CASE
     enum-strategy: NAME
     boolean-strategy: ONE_ZERO
-    default-fetch-size: 100
-    default-statement-timeout: 30
-    cache-enabled: false
-    lazy-loading-enabled: false
     monitoring:
       enabled: true
       slow-query-threshold: 1000
