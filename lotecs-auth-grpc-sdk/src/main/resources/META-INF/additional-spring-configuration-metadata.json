@@ -1,0 +1,55 @@
+{
+  "properties": [
+    {
+      "name": "lotecs.auth.grpc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Auth gRPC SDK auto-configuration.",
+      "defaultValue": true
+    },
+    {
+      "name": "lotecs.auth.grpc.address",
+      "type": "java.lang.String",
+      "description": "Address of the Auth gRPC server. Format: static://host:port or dns:///host:port",
+      "defaultValue": "static://localhost:9090"
+    },
+    {
+      "name": "lotecs.auth.grpc.deadline-ms",
+      "type": "java.lang.Long",
+      "description": "Deadline in milliseconds for gRPC calls.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "lotecs.auth.grpc.negotiation-type",
+      "type": "java.lang.String",
+      "description": "Negotiation type for gRPC connection. Options: PLAINTEXT, TLS",
+      "defaultValue": "PLAINTEXT"
+    },
+    {
+      "name": "lotecs.auth.grpc.enable-retry",
+      "type": "java.lang.Boolean",
+      "description": "Enable automatic retry for failed gRPC calls.",
+      "defaultValue": false
+    },
+    {
+      "name": "lotecs.auth.grpc.max-retry-attempts",
+      "type": "java.lang.Integer",
+      "description": "Maximum number of retry attempts when retry is enabled.",
+      "defaultValue": 3
+    }
+  ],
+  "hints": [
+    {
+      "name": "lotecs.auth.grpc.negotiation-type",
+      "values": [
+        {
+          "value": "PLAINTEXT",
+          "description": "Plaintext connection without TLS"
+        },
+        {
+          "value": "TLS",
+          "description": "TLS encrypted connection"
+        }
+      ]
+    }
+  ]
+}
