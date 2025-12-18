@@ -28,7 +28,7 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
 ENV SPRING_PROFILES_ACTIVE=dev
 
 # Expose ports (HTTP, gRPC)
-EXPOSE 8000 9110
+EXPOSE 8000 50053
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

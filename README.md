@@ -151,7 +151,7 @@ lotecs-auth/
 
 ```bash
 docker build -t lotecs-auth .
-docker run -p 8000:8000 -p 9110:9110 lotecs-auth
+docker run -p 8000:8000 -p 50053:50053 lotecs-auth
 ```
 
 ## 설정
@@ -161,7 +161,7 @@ docker run -p 8000:8000 -p 9110:9110 lotecs-auth
 | 포트 | 용도 |
 |------|------|
 | 8000 | HTTP REST API |
-| 9110 | gRPC API |
+| 50053 | gRPC API |
 
 ### 환경변수
 
@@ -231,7 +231,7 @@ dependencies {
 grpc:
   client:
     auth-service:
-      address: static://localhost:9110
+      address: static://localhost:50053
       negotiationType: plaintext
 ```
 

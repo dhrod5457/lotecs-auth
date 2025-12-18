@@ -24,7 +24,7 @@ LOTECS Auth는 JWT 기반 토큰 인증을 제공하는 중앙 인증 서비스�
 | 연동 방식 | 용도 | 통신 |
 |-----------|------|------|
 | JWT 토큰 검증 | HTTP 요청의 인증/인가 처리 | 토큰 자체 검증 (Auth 서비스 호출 불필요) |
-| gRPC SDK | 사용자/역할/권한 조회, 토큰 발급 등 | gRPC (포트 9110) |
+| gRPC SDK | 사용자/역할/권한 조회, 토큰 발급 등 | gRPC (포트 50053) |
 
 ### JWT 토큰 구조
 
@@ -195,7 +195,7 @@ lotecs:
 grpc:
   client:
     auth-service:
-      address: static://${AUTH_SERVICE_HOST:localhost}:${AUTH_SERVICE_GRPC_PORT:9110}
+      address: static://${AUTH_SERVICE_HOST:localhost}:${AUTH_SERVICE_GRPC_PORT:50053}
       negotiationType: ${GRPC_NEGOTIATION_TYPE:plaintext}
 
 # Redis 설정 (블랙리스트용)
@@ -229,7 +229,7 @@ lotecs:
 | REDIS_HOST | Redis 호스트 | O |
 | REDIS_PORT | Redis 포트 | - |
 | AUTH_SERVICE_HOST | Auth gRPC 서버 호스트 | gRPC 사용 시 |
-| AUTH_SERVICE_GRPC_PORT | Auth gRPC 서버 포트 (기본: 9110) | - |
+| AUTH_SERVICE_GRPC_PORT | Auth gRPC 서버 포트 (기본: 50053) | - |
 
 ---
 
@@ -569,6 +569,72 @@ X-Tenant-Id: TENANT_001
 4. **사용자 동기화**: `userSyncEnabled=true` 설정 시 SSO 사용자 정보 자동 동기화
 5. **역할 매핑**: `roleMappingEnabled=true` 설정 시 SSO 역할을 내부 역할에 매핑
 
+### SSO Admin API
+
+테넌트별 SSO 설정을 관리하는 REST API를 제공한다.
+
+#### SSO 설정 조회
+
+```http
+GET /admin/sso/config/{tenantId} HTTP/1.1
+Authorization: Bearer {admin_token}
+```
+
+**응답**:
+```json
+{
+    "code": "SUCCESS",
+    "data": {
+        "tenantId": "TENANT_001",
+        "ssoType": "KEYCLOAK",
+        "ssoEnabled": true,
+        "relayEndpoint": "https://relay.example.com",
+        "relayTimeoutMs": 5000,
+        "ssoServerUrl": "https://keycloak.example.com",
+        "ssoRealm": "my-realm",
+        "ssoClientId": "my-client",
+        "userSyncEnabled": true,
+        "roleMappingEnabled": true
+    }
+}
+```
+
+#### SSO 설정 수정
+
+```http
+PUT /admin/sso/config/{tenantId} HTTP/1.1
+Authorization: Bearer {admin_token}
+Content-Type: application/json
+
+{
+    "ssoType": "KEYCLOAK",
+    "ssoEnabled": true,
+    "ssoServerUrl": "https://keycloak.example.com",
+    "ssoRealm": "my-realm",
+    "ssoClientId": "new-client-id",
+    "userSyncEnabled": true,
+    "roleMappingEnabled": false
+}
+```
+
+#### SSO 연결 테스트
+
+```http
+POST /admin/sso/test?tenantId=TENANT_001 HTTP/1.1
+Authorization: Bearer {admin_token}
+```
+
+**응답**:
+```json
+{
+    "code": "SUCCESS",
+    "data": {
+        "success": true,
+        "message": "SSO connection test successful"
+    }
+}
+```
+
 ---
 
 ## gRPC 클라이언트 사용
@@ -847,10 +913,10 @@ logging:
 **확인 사항**:
 ```bash
 # Auth 서비스 gRPC 포트 확인
-nc -zv {AUTH_SERVICE_HOST} 9110
+nc -zv {AUTH_SERVICE_HOST} 50053
 
 # 설정 확인
-grpc.client.auth-service.address=static://host:9110
+grpc.client.auth-service.address=static://host:50053
 ```
 
 ### 4. 테넌트 불일치
