@@ -41,12 +41,13 @@ lotecs:
       password: ${REDIS_PASSWORD}
 
   exception:
-    include-stack-trace: false
     hide-server-error-details: true
 
-  web:
-    cors:
-      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  security:
+    web:
+      cors:
+        allowed-origin-patterns:
+          - ${CORS_ALLOWED_ORIGINS}
 
 logging:
   level:

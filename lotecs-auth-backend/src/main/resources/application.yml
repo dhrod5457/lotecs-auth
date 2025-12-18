@@ -201,33 +201,10 @@ lotecs:
     issuer: "lotecs-platform"
     audience: "lotecs-services"
     clock-skew-seconds: 30
-    blacklist:
+    blacklist-ttl-seconds: 300
+    redis:
       enabled: true
-      storage: redis
-      redis:
-        key-prefix: "lotecs:jwt:blacklist:"
-        ttl-buffer-seconds: 300
-    web:
-      enabled: true
-      filter:
-        exclude-paths:
-          - /api/auth/**
-          - /api/public/**
-          - /actuator/**
-          - /health/**
-        query-parameter-name: token
-        token-expired-header:
-          enabled: true
-          header-name: X-Token-Expired
-          header-value: "true"
-        clear-context-after-chain: true
-      role-authority:
-        use-prefix: true
-        prefix: "ROLE_"
-      authority-claim:
-        enabled: true
-        claim-key: "authorities"
-        merge-with-roles: true
+      key-prefix: "lotecs:jwt:blacklist:"
 
   # Crypto 모듈 설정
   crypto:
@@ -302,15 +279,24 @@ lotecs:
     include-trace-id: true
     include-timestamp: true
     hide-server-error-details: true
-    include-stack-trace: false
 
-  # Web 모듈 설정
-  web:
-    enabled: true
-    cors:
-      allowed-origins: "*"
-      allowed-methods: "GET,POST,PUT,DELETE,OPTIONS"
-      allowed-headers: "*"
+  # Security Web 모듈 설정
+  security:
+    web:
+      enabled: true
+      cors:
+        enabled: true
+        allowed-origin-patterns:
+          - "*"
+        allowed-methods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+        allowed-headers:
+          - "*"
+        allow-credentials: false
 
   # Cache 모듈 설정
   cache:
