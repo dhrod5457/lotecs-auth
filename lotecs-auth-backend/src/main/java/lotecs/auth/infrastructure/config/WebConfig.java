@@ -25,11 +25,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void configurePathMatch(PathMatchConfigurer configurer) {
         configurer.addPathPrefix("/api/v1/ath",
-                HandlerTypePredicate.forBasePackage("lotecs.batch.admin.presentation.job")
-                        .or(HandlerTypePredicate.forBasePackage("lotecs.batch.admin.presentation.execution"))
-                        .or(HandlerTypePredicate.forBasePackage("lotecs.batch.admin.presentation.workflow"))
-                        .or(HandlerTypePredicate.forBasePackage("lotecs.batch.admin.presentation.schedule"))
-                        .or(HandlerTypePredicate.forBasePackage("lotecs.batch.admin.presentation.dashboard"))
-                        .or(HandlerTypePredicate.forBasePackage("lotecs.batch.admin.presentation.monitoring")));
+                HandlerTypePredicate.forBasePackage("lotecs.auth.presentation"));
     }
 }

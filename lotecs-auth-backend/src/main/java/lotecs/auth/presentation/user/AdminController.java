@@ -14,14 +14,13 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final UserService userService;
 
     /**
-     * POST /admin/users - 사용자 생성
+     * POST /api/v1/ath/users - 사용자 생성
      */
     @PostMapping("/users")
     public CommonResponse<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {

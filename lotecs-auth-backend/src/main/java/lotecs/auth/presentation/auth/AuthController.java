@@ -10,7 +10,12 @@ import lotecs.auth.application.auth.dto.ValidateTokenRequest;
 import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.auth.service.AuthService;
 import lotecs.framework.web.dto.CommonResponse;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -21,12 +26,10 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * POST /auth/login - 로그인
+     * POST /api/v1/ath/auth/login - 로그인
      */
     @PostMapping("/login")
-    public CommonResponse<LoginResponse> login(
-            @Valid @RequestBody LoginRequest request,
-            @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedFor) {
+    public CommonResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request, @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedFor) {
 
         // IP 주소 설정
         if (forwardedFor != null && !forwardedFor.isEmpty()) {

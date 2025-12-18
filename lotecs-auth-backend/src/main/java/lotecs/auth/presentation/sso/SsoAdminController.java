@@ -19,7 +19,7 @@ public class SsoAdminController {
     private final SsoConfigService ssoConfigService;
 
     /**
-     * GET /admin/sso/config/{tenantId} - SSO 설정 조회
+     * GET /api/v1/ath/admin/sso/config/{tenantId} - SSO 설정 조회
      */
     @GetMapping("/config/{tenantId}")
     public CommonResponse<SsoConfigDto> getSsoConfig(@PathVariable String tenantId) {
