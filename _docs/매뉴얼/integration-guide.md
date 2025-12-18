@@ -10,10 +10,11 @@
 4. [설정](#설정)
 5. [JWT 인증 연동](#jwt-인증-연동)
 6. [SSO 연동](#sso-연동)
-7. [gRPC 클라이언트 사용](#grpc-클라이언트-사용)
-8. [권한 체크](#권한-체크)
-9. [멀티테넌시](#멀티테넌시)
-10. [트러블슈팅](#트러블슈팅)
+7. [Relay 서버 연동](#relay-서버-연동)
+8. [gRPC 클라이언트 사용](#grpc-클라이언트-사용)
+9. [권한 체크](#권한-체크)
+10. [멀티테넌시](#멀티테넌시)
+11. [트러블슈팅](#트러블슈팅)
 
 ---
 
@@ -632,6 +633,114 @@ Authorization: Bearer {admin_token}
         "success": true,
         "message": "SSO connection test successful"
     }
+}
+```
+
+### Relay 서버 연동
+
+LOTECS Auth는 Relay 서버와 연동하여 조직 정보와 사용자-조직 매핑을 동기화할 수 있다.
+
+#### Relay 서버 역할
+
+```
+┌─────────────┐     gRPC      ┌─────────────┐     동기화     ┌─────────────┐
+│   Relay     │──────────────>│ LOTECS Auth │<──────────────>│   Client    │
+│   Server    │               │   Service   │                │   Service   │
+└─────────────┘               └─────────────┘                └─────────────┘
+      │                              │
+      │ - 사용자 인증 (SSO)          │ - 조직 정보 저장
+      │ - 조직 정보 제공             │ - 사용자-조직 매핑
+      │ - 사용자 정보 제공           │ - JWT 토큰 발급
+      │                              │
+```
+
+#### Relay 설정
+
+```yaml
+# application.yml
+auth:
+  sso:
+    relay:
+      enabled: true
+      default-timeout-ms: 5000
+      keepalive-time-seconds: 30
+      keepalive-timeout-seconds: 10
+```
+
+| 설정 | 설명 | 기본값 |
+|------|------|--------|
+| enabled | Relay SSO 활성화 | true |
+| default-timeout-ms | 기본 타임아웃 (ms) | 5000 |
+| keepalive-time-seconds | Keep-alive 시간 (초) | 30 |
+| keepalive-timeout-seconds | Keep-alive 타임아웃 (초) | 10 |
+
+#### 조직 동기화 API (gRPC)
+
+Relay 서버에서 조직 정보를 동기화할 때 사용하는 gRPC API:
+
+**OrganizationService**
+
+| RPC | 설명 |
+|-----|------|
+| GetOrganization | 조직 조회 |
+| ListOrganizations | 조직 목록 조회 |
+| SyncOrganization | 조직 동기화 (생성/수정) |
+| DeleteOrganization | 조직 삭제 |
+
+**UserOrganizationService**
+
+| RPC | 설명 |
+|-----|------|
+| GetUserOrganizations | 사용자의 조직 목록 조회 |
+| GetPrimaryUserOrganization | 사용자의 주 소속 조회 |
+| SyncUserOrganization | 사용자-조직 매핑 동기화 |
+| DeleteUserOrganization | 사용자-조직 매핑 삭제 |
+
+#### 조직 동기화 흐름
+
+```
+1. Relay -> Auth: SyncOrganization(조직 정보)
+2. Auth: 조직 존재 여부 확인
+   - 없으면 신규 생성
+   - 있으면 정보 업데이트
+3. Auth -> Relay: 동기화 결과 반환
+
+4. Relay -> Auth: SyncUserOrganization(사용자-조직 매핑)
+5. Auth: 매핑 존재 여부 확인
+   - 없으면 신규 생성
+   - 있으면 정보 업데이트
+6. Auth -> Relay: 동기화 결과 반환
+```
+
+#### 조직 데이터 구조
+
+```json
+{
+    "organizationId": "ORG_001",
+    "tenantId": "TENANT_001",
+    "organizationCode": "DEPT_IT",
+    "organizationName": "IT 부서",
+    "organizationType": "DEPARTMENT",
+    "parentOrganizationId": "ORG_ROOT",
+    "orgLevel": 2,
+    "displayOrder": 1,
+    "active": true
+}
+```
+
+#### 사용자-조직 매핑 데이터 구조
+
+```json
+{
+    "userId": "USER_001",
+    "organizationId": "ORG_001",
+    "tenantId": "TENANT_001",
+    "roleId": "ROLE_001",
+    "isPrimary": true,
+    "position": "팀장",
+    "startDate": "2024-01-01",
+    "endDate": null,
+    "active": true
 }
 ```
 
