@@ -11,6 +11,10 @@ import lotecs.auth.domain.user.model.User;
 import lotecs.auth.domain.user.model.UserStatus;
 import lotecs.auth.domain.user.repository.RoleRepository;
 import lotecs.auth.domain.user.repository.UserRepository;
+import lotecs.auth.exception.auth.InvalidCredentialsException;
+import lotecs.auth.exception.role.RoleNotFoundException;
+import lotecs.auth.exception.user.UserAlreadyExistsException;
+import lotecs.auth.exception.user.UserNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +45,7 @@ public class UserService {
         if (userRepository.findByUsernameAndTenantId(request.getUsername(), request.getTenantId()).isPresent()) {
             log.warn("[USER-002] 중복된 사용자: username={}, tenant={}",
                     request.getUsername(), request.getTenantId());
-            throw new IllegalArgumentException("Username already exists");
+            throw UserAlreadyExistsException.byUsername(request.getUsername());
         }
 
         // 사용자 생성
@@ -63,7 +67,7 @@ public class UserService {
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
             List<Role> roles = request.getRoles().stream()
                     .map(roleName -> roleRepository.findByRoleNameAndTenantId(roleName, request.getTenantId())
-                            .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleName)))
+                            .orElseThrow(() -> RoleNotFoundException.byName(roleName)))
                     .collect(Collectors.toList());
             user.setRoles(roles);
         }
@@ -85,7 +89,7 @@ public class UserService {
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[USER-005] 사용자를 찾을 수 없음: userId={}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return UserNotFoundException.byId(userId);
                 });
 
         return userDtoMapper.toDto(user);
@@ -101,7 +105,7 @@ public class UserService {
         User user = userRepository.findByUsernameAndTenantId(username, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[USER-007] 사용자를 찾을 수 없음: username={}", username);
-                    return new IllegalArgumentException("User not found");
+                    return UserNotFoundException.byUsername(username);
                 });
 
         return userDtoMapper.toDto(user);
@@ -130,7 +134,7 @@ public class UserService {
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[USER-010] 사용자를 찾을 수 없음: userId={}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return UserNotFoundException.byId(userId);
                 });
 
         // 정보 업데이트
@@ -162,7 +166,7 @@ public class UserService {
         userRepository.findByIdAndTenantId(userId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[USER-013] 사용자를 찾을 수 없음: userId={}", userId);
-                    return new IllegalArgumentException("User not found");
+                    return UserNotFoundException.byId(userId);
                 });
 
         userRepository.delete(userId);
@@ -178,10 +182,10 @@ public class UserService {
         log.info("[USER-015] 역할 할당: userId={}, tenant={}, roleId={}", userId, tenantId, roleId);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+                .orElseThrow(() -> RoleNotFoundException.byId(roleId));
 
         user.addRole(role);
         user.setUpdatedAt(LocalDateTime.now());
@@ -198,13 +202,13 @@ public class UserService {
         log.info("[USER-017] 다중 역할 할당: userId={}, tenant={}, roleCount={}", userId, tenantId, roleIds.size());
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         int assignedCount = 0;
         for (String roleId : roleIds) {
             try {
                 Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+                        .orElseThrow(() -> RoleNotFoundException.byId(roleId));
                 user.addRole(role);
                 assignedCount++;
             } catch (Exception e) {
@@ -227,10 +231,10 @@ public class UserService {
         log.info("[USER-020] 역할 제거: userId={}, tenant={}, roleId={}", userId, tenantId, roleId);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+                .orElseThrow(() -> RoleNotFoundException.byId(roleId));
 
         user.removeRole(role);
         user.setUpdatedAt(LocalDateTime.now());
@@ -247,7 +251,7 @@ public class UserService {
         log.info("[USER-022] 계정 잠금: userId={}, tenant={}, reason={}", userId, tenantId, reason);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         user.setAccountNonLocked(false);
         user.setStatus(UserStatus.LOCKED);
@@ -265,7 +269,7 @@ public class UserService {
         log.info("[USER-024] 계정 잠금 해제: userId={}, tenant={}", userId, tenantId);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         user.setAccountNonLocked(true);
         user.setStatus(UserStatus.ACTIVE);
@@ -284,12 +288,12 @@ public class UserService {
         log.info("[USER-026] 비밀번호 변경: userId={}, tenant={}", userId, tenantId);
 
         User user = userRepository.findByIdAndTenantId(userId, tenantId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> UserNotFoundException.byId(userId));
 
         // 현재 비밀번호 확인
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             log.warn("[USER-027] 현재 비밀번호 불일치: userId={}", userId);
-            throw new IllegalArgumentException("Current password is incorrect");
+            throw InvalidCredentialsException.passwordMismatch();
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));

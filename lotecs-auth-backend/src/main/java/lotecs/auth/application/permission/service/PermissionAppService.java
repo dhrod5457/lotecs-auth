@@ -10,6 +10,9 @@ import lotecs.auth.domain.user.model.Permission;
 import lotecs.auth.domain.user.model.RolePermission;
 import lotecs.auth.domain.user.repository.PermissionRepository;
 import lotecs.auth.domain.user.repository.RoleRepository;
+import lotecs.auth.exception.permission.PermissionAlreadyExistsException;
+import lotecs.auth.exception.permission.PermissionNotFoundException;
+import lotecs.auth.exception.role.RoleNotFoundException;
 import lotecs.auth.infrastructure.persistence.user.mapper.RolePermissionMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +39,7 @@ public class PermissionAppService {
                 .filter(p -> p.getTenantId().equals(tenantId))
                 .orElseThrow(() -> {
                     log.warn("[PERM-002] 권한을 찾을 수 없음: permissionId={}", permissionId);
-                    return new IllegalArgumentException("Permission not found: " + permissionId);
+                    return PermissionNotFoundException.byId(permissionId);
                 });
 
         return permissionDtoMapper.toDto(permission);
@@ -61,13 +64,13 @@ public class PermissionAppService {
         // 중복 확인 (permissionName)
         if (permissionRepository.findByPermissionName(request.getPermissionName(), request.getTenantId()).isPresent()) {
             log.warn("[PERM-005] 중복된 권한명: permissionName={}", request.getPermissionName());
-            throw new IllegalArgumentException("Permission name already exists: " + request.getPermissionName());
+            throw PermissionAlreadyExistsException.byName(request.getPermissionName());
         }
 
         // 중복 확인 (resource + action)
         if (permissionRepository.findByResourceAndAction(request.getResource(), request.getAction(), request.getTenantId()).isPresent()) {
             log.warn("[PERM-006] 중복된 리소스/액션: resource={}, action={}", request.getResource(), request.getAction());
-            throw new IllegalArgumentException("Permission with resource and action already exists");
+            throw PermissionAlreadyExistsException.byResourceAndAction(request.getResource(), request.getAction());
         }
 
         Permission permission = Permission.create(
@@ -95,7 +98,7 @@ public class PermissionAppService {
                 .filter(p -> p.getTenantId().equals(request.getTenantId()))
                 .orElseThrow(() -> {
                     log.warn("[PERM-009] 권한을 찾을 수 없음: permissionId={}", request.getPermissionId());
-                    return new IllegalArgumentException("Permission not found: " + request.getPermissionId());
+                    return PermissionNotFoundException.byId(request.getPermissionId());
                 });
 
         permission.updateInfo(request.getDescription(), request.getUpdatedBy());
@@ -113,7 +116,7 @@ public class PermissionAppService {
                 .filter(p -> p.getTenantId().equals(tenantId))
                 .orElseThrow(() -> {
                     log.warn("[PERM-012] 권한을 찾을 수 없음: permissionId={}", permissionId);
-                    return new IllegalArgumentException("Permission not found: " + permissionId);
+                    return PermissionNotFoundException.byId(permissionId);
                 });
 
         // 역할-권한 매핑 삭제
@@ -132,7 +135,7 @@ public class PermissionAppService {
         roleRepository.findByIdAndTenantId(roleId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[PERM-015] 역할을 찾을 수 없음: roleId={}", roleId);
-                    return new IllegalArgumentException("Role not found: " + roleId);
+                    return RoleNotFoundException.byId(roleId);
                 });
 
         List<Permission> permissions = permissionRepository.findByRoleId(roleId);
@@ -149,7 +152,7 @@ public class PermissionAppService {
         roleRepository.findByIdAndTenantId(roleId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[PERM-017] 역할을 찾을 수 없음: roleId={}", roleId);
-                    return new IllegalArgumentException("Role not found: " + roleId);
+                    return RoleNotFoundException.byId(roleId);
                 });
 
         List<RolePermission> rolePermissions = permissionIds.stream()
@@ -188,7 +191,7 @@ public class PermissionAppService {
         roleRepository.findByIdAndTenantId(roleId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[PERM-022] 역할을 찾을 수 없음: roleId={}", roleId);
-                    return new IllegalArgumentException("Role not found: " + roleId);
+                    return RoleNotFoundException.byId(roleId);
                 });
 
         rolePermissionMapper.delete(roleId, permissionId);

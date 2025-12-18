@@ -6,6 +6,8 @@ import lotecs.auth.application.user.dto.RoleStatusDto;
 import lotecs.auth.application.user.mapper.RoleStatusDtoMapper;
 import lotecs.auth.domain.user.model.RoleStatus;
 import lotecs.auth.domain.user.repository.RoleStatusRepository;
+import lotecs.auth.exception.role.RoleStatusAlreadyExistsException;
+import lotecs.auth.exception.role.RoleStatusNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,7 @@ public class RoleStatusService {
         RoleStatus roleStatus = roleStatusRepository.findByStatusCode(statusCode)
                 .orElseThrow(() -> {
                     log.warn("[ROLE-STATUS-002] 역할 상태를 찾을 수 없음: statusCode={}", statusCode);
-                    return new IllegalArgumentException("Role status not found: " + statusCode);
+                    return RoleStatusNotFoundException.byCode(statusCode);
                 });
 
         return roleStatusDtoMapper.toDto(roleStatus);
@@ -60,7 +62,7 @@ public class RoleStatusService {
 
         if (roleStatusRepository.findByStatusCode(request.getStatusCode()).isPresent()) {
             log.warn("[ROLE-STATUS-007] 이미 존재하는 상태 코드: statusCode={}", request.getStatusCode());
-            throw new IllegalArgumentException("Status code already exists: " + request.getStatusCode());
+            throw RoleStatusAlreadyExistsException.byCode(request.getStatusCode());
         }
 
         RoleStatus roleStatus = RoleStatus.create(
@@ -95,7 +97,7 @@ public class RoleStatusService {
         RoleStatus roleStatus = roleStatusRepository.findByStatusCode(statusCode)
                 .orElseThrow(() -> {
                     log.warn("[ROLE-STATUS-010] 역할 상태를 찾을 수 없음: statusCode={}", statusCode);
-                    return new IllegalArgumentException("Role status not found: " + statusCode);
+                    return RoleStatusNotFoundException.byCode(statusCode);
                 });
 
         roleStatusDtoMapper.updateEntity(request, roleStatus);
@@ -114,7 +116,7 @@ public class RoleStatusService {
 
         if (roleStatusRepository.findByStatusCode(statusCode).isEmpty()) {
             log.warn("[ROLE-STATUS-013] 역할 상태를 찾을 수 없음: statusCode={}", statusCode);
-            throw new IllegalArgumentException("Role status not found: " + statusCode);
+            throw RoleStatusNotFoundException.byCode(statusCode);
         }
 
         roleStatusRepository.delete(statusCode);

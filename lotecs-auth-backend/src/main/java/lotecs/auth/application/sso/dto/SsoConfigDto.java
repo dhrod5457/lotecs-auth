@@ -14,8 +14,6 @@ public class SsoConfigDto {
     private String tenantId;
     private String ssoType;
     private Boolean ssoEnabled;
-    private String relayEndpoint;
-    private Integer relayTimeoutMs;
     private String ssoServerUrl;
     private String ssoRealm;
     private String ssoClientId;

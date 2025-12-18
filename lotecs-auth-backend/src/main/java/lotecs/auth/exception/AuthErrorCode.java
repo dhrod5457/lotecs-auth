@@ -1,0 +1,101 @@
+package lotecs.auth.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lotecs.framework.common.exception.core.ErrorCode;
+import org.springframework.http.HttpStatus;
+
+/**
+ * lotecs-auth 서비스 에러 코드 정의.
+ * 에러 코드 명명 규칙: ATH_{CATEGORY}_{ACTION}
+ */
+@Getter
+@RequiredArgsConstructor
+public enum AuthErrorCode implements ErrorCode {
+
+    // ===== 인증 (CREDENTIALS) =====
+    ATH_CREDENTIALS_INVALID("ATH_CREDENTIALS_INVALID", "아이디 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED),
+    ATH_CREDENTIALS_PASSWORD_MISMATCH("ATH_CREDENTIALS_PASSWORD_MISMATCH", "현재 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== 계정 상태 (ACCOUNT) =====
+    ATH_ACCOUNT_LOCKED("ATH_ACCOUNT_LOCKED", "계정이 잠겨있습니다.", HttpStatus.LOCKED),
+    ATH_ACCOUNT_DISABLED("ATH_ACCOUNT_DISABLED", "계정이 비활성화되었습니다.", HttpStatus.FORBIDDEN),
+    ATH_ACCOUNT_NOT_ACTIVE("ATH_ACCOUNT_NOT_ACTIVE", "계정이 활성 상태가 아닙니다.", HttpStatus.FORBIDDEN),
+
+    // ===== 토큰 (TOKEN) =====
+    ATH_TOKEN_REFRESH_FAILED("ATH_TOKEN_REFRESH_FAILED", "토큰 갱신에 실패했습니다.", HttpStatus.UNAUTHORIZED),
+
+    // ===== 사용자 (USER) =====
+    ATH_USER_NOT_FOUND("ATH_USER_NOT_FOUND", "사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_USER_ALREADY_EXISTS("ATH_USER_ALREADY_EXISTS", "이미 존재하는 사용자입니다.", HttpStatus.CONFLICT),
+    ATH_USER_USERNAME_REQUIRED("ATH_USER_USERNAME_REQUIRED", "사용자명은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_USER_PASSWORD_REQUIRED("ATH_USER_PASSWORD_REQUIRED", "비밀번호는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_USER_EMAIL_INVALID("ATH_USER_EMAIL_INVALID", "유효한 이메일 주소를 입력해주세요.", HttpStatus.BAD_REQUEST),
+    ATH_USER_TENANT_REQUIRED("ATH_USER_TENANT_REQUIRED", "테넌트 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== 테넌트 (TENANT) =====
+    ATH_TENANT_NOT_FOUND("ATH_TENANT_NOT_FOUND", "테넌트를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_TENANT_ALREADY_EXISTS("ATH_TENANT_ALREADY_EXISTS", "이미 존재하는 사이트 코드입니다.", HttpStatus.CONFLICT),
+    ATH_TENANT_ID_REQUIRED("ATH_TENANT_ID_REQUIRED", "테넌트 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_NAME_REQUIRED("ATH_TENANT_NAME_REQUIRED", "사이트 이름은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_CODE_REQUIRED("ATH_TENANT_CODE_REQUIRED", "사이트 코드는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_DOMAIN_REQUIRED("ATH_TENANT_DOMAIN_REQUIRED", "주 도메인은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_THEME_REQUIRED("ATH_TENANT_THEME_REQUIRED", "테마는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_PLAN_REQUIRED("ATH_TENANT_PLAN_REQUIRED", "플랜 코드는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_LEVEL_INVALID("ATH_TENANT_LEVEL_INVALID", "사이트 레벨은 0~5 범위여야 합니다.", HttpStatus.BAD_REQUEST),
+    ATH_TENANT_STATUS_INVALID("ATH_TENANT_STATUS_INVALID", "현재 상태에서 해당 작업을 수행할 수 없습니다.", HttpStatus.UNPROCESSABLE_ENTITY),
+
+    // ===== 역할 (ROLE) =====
+    ATH_ROLE_NOT_FOUND("ATH_ROLE_NOT_FOUND", "역할을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_ROLE_ALREADY_EXISTS("ATH_ROLE_ALREADY_EXISTS", "이미 존재하는 역할명입니다.", HttpStatus.CONFLICT),
+    ATH_ROLE_NAME_REQUIRED("ATH_ROLE_NAME_REQUIRED", "역할명은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ROLE_TENANT_REQUIRED("ATH_ROLE_TENANT_REQUIRED", "테넌트 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ROLE_PRIORITY_INVALID("ATH_ROLE_PRIORITY_INVALID", "우선순위는 0 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    ATH_ROLE_ID_REQUIRED("ATH_ROLE_ID_REQUIRED", "역할 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== 역할상태 (ROLE_STATUS) =====
+    ATH_ROLE_STATUS_NOT_FOUND("ATH_ROLE_STATUS_NOT_FOUND", "역할 상태를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_ROLE_STATUS_ALREADY_EXISTS("ATH_ROLE_STATUS_ALREADY_EXISTS", "이미 존재하는 상태 코드입니다.", HttpStatus.CONFLICT),
+    ATH_ROLE_STATUS_CODE_REQUIRED("ATH_ROLE_STATUS_CODE_REQUIRED", "상태 코드는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ROLE_STATUS_NAME_REQUIRED("ATH_ROLE_STATUS_NAME_REQUIRED", "상태 이름은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ROLE_STATUS_CATEGORY_REQUIRED("ATH_ROLE_STATUS_CATEGORY_REQUIRED", "역할 카테고리는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ROLE_STATUS_CATEGORY_INVALID("ATH_ROLE_STATUS_CATEGORY_INVALID", "유효하지 않은 역할 카테고리입니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== 권한 (PERMISSION) =====
+    ATH_PERMISSION_NOT_FOUND("ATH_PERMISSION_NOT_FOUND", "권한을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_PERMISSION_ALREADY_EXISTS("ATH_PERMISSION_ALREADY_EXISTS", "이미 존재하는 권한입니다.", HttpStatus.CONFLICT),
+    ATH_PERMISSION_NAME_REQUIRED("ATH_PERMISSION_NAME_REQUIRED", "권한명은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_PERMISSION_RESOURCE_REQUIRED("ATH_PERMISSION_RESOURCE_REQUIRED", "리소스는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_PERMISSION_ACTION_REQUIRED("ATH_PERMISSION_ACTION_REQUIRED", "액션은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_PERMISSION_ID_REQUIRED("ATH_PERMISSION_ID_REQUIRED", "권한 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_PERMISSION_TENANT_REQUIRED("ATH_PERMISSION_TENANT_REQUIRED", "테넌트 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== 조직 (ORGANIZATION) =====
+    ATH_ORGANIZATION_NOT_FOUND("ATH_ORGANIZATION_NOT_FOUND", "조직을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_ORGANIZATION_ID_REQUIRED("ATH_ORGANIZATION_ID_REQUIRED", "조직 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ORGANIZATION_CODE_REQUIRED("ATH_ORGANIZATION_CODE_REQUIRED", "조직 코드는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ORGANIZATION_NAME_REQUIRED("ATH_ORGANIZATION_NAME_REQUIRED", "조직명은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ORGANIZATION_TYPE_REQUIRED("ATH_ORGANIZATION_TYPE_REQUIRED", "조직 유형은 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_ORGANIZATION_LEVEL_INVALID("ATH_ORGANIZATION_LEVEL_INVALID", "조직 레벨은 0 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    ATH_ORGANIZATION_TENANT_REQUIRED("ATH_ORGANIZATION_TENANT_REQUIRED", "테넌트 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== 사용자-조직 (USER_ORG) =====
+    ATH_USER_ORG_NOT_FOUND("ATH_USER_ORG_NOT_FOUND", "사용자-조직 매핑을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_USER_ORG_PRIMARY_NOT_FOUND("ATH_USER_ORG_PRIMARY_NOT_FOUND", "사용자 주 소속을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    ATH_USER_ORG_USER_REQUIRED("ATH_USER_ORG_USER_REQUIRED", "사용자 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_USER_ORG_ORG_REQUIRED("ATH_USER_ORG_ORG_REQUIRED", "조직 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+    ATH_USER_ORG_DATE_INVALID("ATH_USER_ORG_DATE_INVALID", "종료일은 시작일 이후여야 합니다.", HttpStatus.BAD_REQUEST),
+    ATH_USER_ORG_TENANT_REQUIRED("ATH_USER_ORG_TENANT_REQUIRED", "테넌트 ID는 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // ===== SSO =====
+    ATH_SSO_PROVIDER_NOT_FOUND("ATH_SSO_PROVIDER_NOT_FOUND", "SSO 프로바이더를 찾을 수 없습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+    ATH_SSO_TYPE_UNSUPPORTED("ATH_SSO_TYPE_UNSUPPORTED", "지원하지 않는 SSO 타입입니다.", HttpStatus.BAD_REQUEST),
+    ATH_SSO_TYPE_DEPRECATED("ATH_SSO_TYPE_DEPRECATED", "더 이상 지원하지 않는 SSO 타입입니다.", HttpStatus.BAD_REQUEST),
+    ATH_SSO_AUTH_FAILED("ATH_SSO_AUTH_FAILED", "SSO 인증에 실패했습니다.", HttpStatus.UNAUTHORIZED),
+    ATH_SSO_SERVER_ERROR("ATH_SSO_SERVER_ERROR", "SSO 서버 오류가 발생했습니다.", HttpStatus.BAD_GATEWAY),
+    ATH_SSO_RESPONSE_INVALID("ATH_SSO_RESPONSE_INVALID", "SSO 응답이 유효하지 않습니다.", HttpStatus.BAD_GATEWAY);
+
+    private final String code;
+    private final String message;
+    private final HttpStatus httpStatus;
+}

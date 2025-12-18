@@ -2,11 +2,13 @@ package lotecs.auth.domain.organization.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lotecs.auth.exception.organization.UserOrganizationValidationException;
 
 /**
  * 사용자-조직 매핑 도메인 모델
@@ -179,16 +181,16 @@ public class UserOrganization {
      */
     public void validate() {
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다.");
+            throw UserOrganizationValidationException.tenantRequired();
         }
         if (userId == null || userId.trim().isEmpty()) {
-            throw new IllegalArgumentException("사용자 ID는 필수입니다.");
+            throw UserOrganizationValidationException.userRequired();
         }
         if (organizationId == null || organizationId.trim().isEmpty()) {
-            throw new IllegalArgumentException("조직 ID는 필수입니다.");
+            throw UserOrganizationValidationException.organizationRequired();
         }
         if (endDate != null && startDate != null && endDate.isBefore(startDate)) {
-            throw new IllegalArgumentException("종료일은 시작일 이후여야 합니다.");
+            throw UserOrganizationValidationException.dateInvalid();
         }
     }
 }

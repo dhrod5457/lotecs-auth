@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lotecs.auth.exception.role.RoleValidationException;
 
 @Getter
 @Setter
@@ -36,13 +37,13 @@ public class Role {
 
     public void validate() {
         if (roleName == null || roleName.trim().isEmpty()) {
-            throw new IllegalArgumentException("역할 이름은 필수입니다.");
+            throw RoleValidationException.nameRequired();
         }
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("테넌트 ID는 필수입니다.");
+            throw RoleValidationException.tenantRequired();
         }
         if (priority < 0) {
-            throw new IllegalArgumentException("우선순위는 0 이상이어야 합니다.");
+            throw RoleValidationException.priorityInvalid();
         }
     }
 

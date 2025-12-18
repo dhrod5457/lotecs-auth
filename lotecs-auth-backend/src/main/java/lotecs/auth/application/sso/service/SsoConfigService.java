@@ -55,12 +55,6 @@ public class SsoConfigService {
         if (request.getSsoEnabled() != null) {
             config.setSsoEnabled(request.getSsoEnabled());
         }
-        if (request.getRelayEndpoint() != null) {
-            config.setRelayEndpoint(request.getRelayEndpoint());
-        }
-        if (request.getRelayTimeoutMs() != null) {
-            config.setRelayTimeoutMs(request.getRelayTimeoutMs());
-        }
         if (request.getSsoServerUrl() != null) {
             config.setSsoServerUrl(request.getSsoServerUrl());
         }
@@ -96,7 +90,7 @@ public class SsoConfigService {
                 .orElseThrow(() -> new IllegalArgumentException("SSO config not found"));
 
         // TODO: 실제 SSO 연결 테스트 로직 구현
-        // RELAY, KEYCLOAK, LDAP 타입별로 연결 테스트
+        // KEYCLOAK, LDAP, JWT_SSO, CAS, REST_TOKEN, HTTP_FORM 타입별로 연결 테스트
 
         log.info("[SSO-006] SSO 연결 테스트 완료: tenant={}", tenantId);
 

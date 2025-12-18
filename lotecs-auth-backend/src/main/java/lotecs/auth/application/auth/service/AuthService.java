@@ -9,6 +9,12 @@ import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.user.mapper.UserDtoMapper;
 import lotecs.auth.application.user.service.UserProfileService;
 import lotecs.auth.application.user.service.UserSyncService;
+import lotecs.auth.exception.auth.AccountDisabledException;
+import lotecs.auth.exception.auth.AccountLockedException;
+import lotecs.auth.exception.auth.InvalidCredentialsException;
+import lotecs.auth.exception.auth.TokenRefreshException;
+import lotecs.auth.exception.sso.SsoAuthenticationException;
+import lotecs.auth.exception.user.UserNotFoundException;
 import lotecs.auth.domain.sso.SsoAuthRequest;
 import lotecs.auth.domain.sso.SsoAuthResult;
 import lotecs.auth.domain.sso.SsoProvider;
@@ -76,9 +82,6 @@ public class AuthService {
         AuthResult authResult = switch (ssoConfig.getSsoType()) {
             case INTERNAL -> authenticateInternal(request);
             case KEYCLOAK, LDAP, JWT_SSO, CAS, REST_TOKEN, HTTP_FORM -> authenticateExternal(request, ssoConfig);
-            case RELAY, EXTERNAL -> throw new UnsupportedOperationException(
-                    "RELAY/EXTERNAL SSO type is deprecated. Please migrate to JWT_SSO, CAS, REST_TOKEN, or HTTP_FORM"
-            );
         };
 
         // 2. SSO Type에 따라 인증 분기
@@ -175,7 +178,7 @@ public class AuthService {
                 .orElseThrow(() -> {
                     log.warn("[AUTH] 사용자를 찾을 수 없음: username={}, tenant={}",
                             request.getUsername(), request.getTenantId());
-                    return new IllegalArgumentException("Invalid credentials");
+                    return new InvalidCredentialsException();
                 });
 
         // 비밀번호 검증
@@ -183,7 +186,7 @@ public class AuthService {
             log.warn("[AUTH] 비밀번호 불일치: username={}", request.getUsername());
             user.recordLoginFailure();
             userRepository.save(user);
-            throw new IllegalArgumentException("Invalid credentials");
+            throw InvalidCredentialsException.passwordMismatch();
         }
 
         // 계정 상태 확인
@@ -220,7 +223,7 @@ public class AuthService {
         if (!ssoResult.isSuccess()) {
             log.warn("[AUTH] 외부 SSO 인증 실패: ssoType={}, errorCode={}, errorMessage={}",
                     ssoConfig.getSsoType(), ssoResult.getErrorCode(), ssoResult.getErrorMessage());
-            throw new IllegalArgumentException("SSO authentication failed: " + ssoResult.getErrorMessage());
+            throw new SsoAuthenticationException(ssoResult.getErrorMessage());
         }
 
         // Fallback 여부 확인
@@ -241,7 +244,7 @@ public class AuthService {
             // Fallback의 경우 이미 DB에 있는 사용자
             user = userRepository
                     .findByUsernameAndTenantId(ssoResult.getUsername(), request.getTenantId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> UserNotFoundException.byUsername(ssoResult.getUsername()));
         } else {
             // 정상 SSO 인증의 경우 사용자 동기화
             user = userSyncService.syncUserFromExternal(ssoResult, ssoConfig);
@@ -272,17 +275,17 @@ public class AuthService {
     private void validateUserStatus(User user) {
         if (!user.isAccountNonLocked()) {
             log.warn("[AUTH] 계정 잠김: userId={}, username={}", user.getUserId(), user.getUsername());
-            throw new IllegalArgumentException("Account is locked");
+            throw new AccountLockedException(user.getUsername());
         }
 
         if (!user.isEnabled()) {
             log.warn("[AUTH] 계정 비활성화: userId={}, username={}", user.getUserId(), user.getUsername());
-            throw new IllegalArgumentException("Account is disabled");
+            throw new AccountDisabledException(user.getUsername());
         }
 
         if (user.getStatus() == UserStatus.SUSPENDED || user.getStatus() == UserStatus.LOCKED) {
             log.warn("[AUTH] 계정 상태 이상: userId={}, status={}", user.getUserId(), user.getStatus());
-            throw new IllegalArgumentException("Account is not active");
+            throw InvalidCredentialsException.accountNotActive();
         }
     }
 
@@ -337,7 +340,7 @@ public class AuthService {
 
         if (!jwtResult.isSuccess()) {
             log.error("[AUTH] 토큰 갱신 후 검증 실패: {}", jwtResult.getErrorMessage());
-            throw new IllegalArgumentException("Token refresh failed");
+            throw new TokenRefreshException(jwtResult.getErrorMessage());
         }
 
         // User 조회 (클레임에서 userId 추출)

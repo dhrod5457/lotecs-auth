@@ -1,11 +1,13 @@
 package lotecs.auth.domain.organization.model;
 
 import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lotecs.auth.exception.organization.OrganizationValidationException;
 
 /**
  * 조직 도메인 모델
@@ -128,22 +130,22 @@ public class Organization {
      */
     public void validate() {
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다.");
+            throw OrganizationValidationException.tenantRequired();
         }
         if (organizationId == null || organizationId.trim().isEmpty()) {
-            throw new IllegalArgumentException("조직 ID는 필수입니다.");
+            throw OrganizationValidationException.idRequired();
         }
         if (organizationCode == null || organizationCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("조직 코드는 필수입니다.");
+            throw OrganizationValidationException.codeRequired();
         }
         if (organizationName == null || organizationName.trim().isEmpty()) {
-            throw new IllegalArgumentException("조직명은 필수입니다.");
+            throw OrganizationValidationException.nameRequired();
         }
         if (organizationType == null || organizationType.trim().isEmpty()) {
-            throw new IllegalArgumentException("조직 유형은 필수입니다.");
+            throw OrganizationValidationException.typeRequired();
         }
         if (orgLevel == null || orgLevel < 0) {
-            throw new IllegalArgumentException("조직 레벨은 0 이상이어야 합니다.");
+            throw OrganizationValidationException.levelInvalid();
         }
     }
 }

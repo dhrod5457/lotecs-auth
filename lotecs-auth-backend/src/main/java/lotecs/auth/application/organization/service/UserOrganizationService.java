@@ -6,6 +6,7 @@ import lotecs.auth.application.organization.dto.UserOrganizationDto;
 import lotecs.auth.application.organization.mapper.UserOrganizationDtoMapper;
 import lotecs.auth.domain.organization.model.UserOrganization;
 import lotecs.auth.domain.organization.repository.UserOrganizationRepository;
+import lotecs.auth.exception.organization.UserOrganizationNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +46,7 @@ public class UserOrganizationService {
         UserOrganization userOrganization = userOrganizationRepository.findPrimaryByUserId(userId)
                 .orElseThrow(() -> {
                     log.warn("[USER-ORG-004] 사용자 주 소속을 찾을 수 없음: userId={}", userId);
-                    return new IllegalArgumentException("Primary organization not found for user: " + userId);
+                    return UserOrganizationNotFoundException.primaryNotFound(userId);
                 });
 
         return userOrganizationDtoMapper.toDto(userOrganization);
@@ -123,7 +124,7 @@ public class UserOrganizationService {
 
         if (userOrganizationRepository.findById(id).isEmpty()) {
             log.warn("[USER-ORG-011] 사용자-조직 매핑을 찾을 수 없음: id={}", id);
-            throw new IllegalArgumentException("User organization not found: " + id);
+            throw UserOrganizationNotFoundException.byId(id);
         }
 
         userOrganizationRepository.delete(id);

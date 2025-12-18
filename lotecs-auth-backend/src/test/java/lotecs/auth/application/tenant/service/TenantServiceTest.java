@@ -5,6 +5,9 @@ import lotecs.auth.application.tenant.mapper.TenantDtoMapper;
 import lotecs.auth.domain.tenant.model.SiteStatus;
 import lotecs.auth.domain.tenant.model.Tenant;
 import lotecs.auth.domain.tenant.repository.TenantRepository;
+import lotecs.auth.exception.tenant.TenantAlreadyExistsException;
+import lotecs.auth.exception.tenant.TenantNotFoundException;
+import lotecs.auth.exception.tenant.TenantStateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -98,8 +101,7 @@ class TenantServiceTest {
 
             // when & then
             assertThatThrownBy(() -> tenantService.getTenant("non-existent"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Tenant not found");
+                    .isInstanceOf(TenantNotFoundException.class);
         }
     }
 
@@ -133,8 +135,7 @@ class TenantServiceTest {
 
             // when & then
             assertThatThrownBy(() -> tenantService.getTenantBySiteCode("UNKNOWN"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Tenant not found");
+                    .isInstanceOf(TenantNotFoundException.class);
         }
     }
 
@@ -229,8 +230,7 @@ class TenantServiceTest {
 
             // when & then
             assertThatThrownBy(() -> tenantService.createTenant(createRequest, "admin"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Site code already exists");
+                    .isInstanceOf(TenantAlreadyExistsException.class);
         }
     }
 
@@ -290,8 +290,7 @@ class TenantServiceTest {
 
             // when & then
             assertThatThrownBy(() -> tenantService.deleteTenant("non-existent"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Tenant not found");
+                    .isInstanceOf(TenantNotFoundException.class);
         }
     }
 
@@ -343,7 +342,7 @@ class TenantServiceTest {
 
             // when & then
             assertThatThrownBy(() -> tenantService.publishTenant("published-tenant", "admin"))
-                    .isInstanceOf(IllegalStateException.class)
+                    .isInstanceOf(TenantStateException.class)
                     .hasMessageContaining("DRAFT 상태에서만");
         }
 
@@ -392,7 +391,7 @@ class TenantServiceTest {
 
             // when & then
             assertThatThrownBy(() -> tenantService.unpublishTenant("draft-tenant", "admin", "사유"))
-                    .isInstanceOf(IllegalStateException.class)
+                    .isInstanceOf(TenantStateException.class)
                     .hasMessageContaining("PUBLISHED 상태에서만");
         }
     }

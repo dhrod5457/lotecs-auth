@@ -7,6 +7,8 @@ import lotecs.auth.domain.sso.SsoType;
 import lotecs.auth.domain.sso.model.TenantSsoConfig;
 import lotecs.auth.domain.user.repository.UserProfileRepository;
 import lotecs.auth.domain.user.repository.UserRepository;
+import lotecs.auth.exception.sso.SsoProviderNotFoundException;
+import lotecs.auth.exception.sso.SsoTypeUnsupportedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -36,20 +38,12 @@ public class SsoProviderFactory {
             case CAS -> providers.get("cas");
             case REST_TOKEN -> providers.get("rest_token");
             case HTTP_FORM -> providers.get("http_form");
-            case INTERNAL -> throw new UnsupportedOperationException(
-                    "INTERNAL SSO type is not supported by SsoProviderFactory"
-            );
-            case RELAY -> throw new UnsupportedOperationException(
-                    "RELAY SSO type is deprecated. Please migrate to JWT_SSO, CAS, REST_TOKEN, or HTTP_FORM"
-            );
-            case EXTERNAL -> throw new UnsupportedOperationException(
-                    "EXTERNAL SSO type is deprecated and not supported"
-            );
+            case INTERNAL -> throw SsoTypeUnsupportedException.internal();
         };
 
         if (provider == null) {
             log.error("No provider found for SSO type: {}", ssoType);
-            throw new IllegalStateException("SSO provider not found for type: " + ssoType);
+            throw new SsoProviderNotFoundException(ssoType.name());
         }
 
         log.debug("Successfully retrieved provider: {} for SSO type: {}", provider.getClass().getSimpleName(), ssoType);

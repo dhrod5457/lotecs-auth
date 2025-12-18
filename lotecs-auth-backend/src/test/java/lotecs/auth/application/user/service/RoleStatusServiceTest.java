@@ -4,6 +4,8 @@ import lotecs.auth.application.user.dto.RoleStatusDto;
 import lotecs.auth.application.user.mapper.RoleStatusDtoMapper;
 import lotecs.auth.domain.user.model.RoleStatus;
 import lotecs.auth.domain.user.repository.RoleStatusRepository;
+import lotecs.auth.exception.role.RoleStatusAlreadyExistsException;
+import lotecs.auth.exception.role.RoleStatusNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -99,8 +101,7 @@ class RoleStatusServiceTest {
 
             // when & then
             assertThatThrownBy(() -> roleStatusService.getRoleStatus("UNKNOWN"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Role status not found");
+                    .isInstanceOf(RoleStatusNotFoundException.class);
         }
     }
 
@@ -226,8 +227,7 @@ class RoleStatusServiceTest {
 
             // when & then
             assertThatThrownBy(() -> roleStatusService.createRoleStatus(createRequest, "admin"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Status code already exists");
+                    .isInstanceOf(RoleStatusAlreadyExistsException.class);
         }
     }
 
@@ -272,8 +272,7 @@ class RoleStatusServiceTest {
 
             // when & then
             assertThatThrownBy(() -> roleStatusService.updateRoleStatus("UNKNOWN", updateRequest, "admin"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Role status not found");
+                    .isInstanceOf(RoleStatusNotFoundException.class);
         }
     }
 
@@ -305,8 +304,7 @@ class RoleStatusServiceTest {
 
             // when & then
             assertThatThrownBy(() -> roleStatusService.deleteRoleStatus("UNKNOWN"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Role status not found");
+                    .isInstanceOf(RoleStatusNotFoundException.class);
         }
     }
 }

@@ -2,6 +2,7 @@ package lotecs.auth.application.role.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import lotecs.auth.exception.role.RoleValidationException;
 
 @Getter
 @Builder
@@ -15,10 +16,10 @@ public class CreateRoleRequest {
 
     public void validate() {
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("테넌트 ID는 필수입니다.");
+            throw RoleValidationException.tenantRequired();
         }
         if (roleName == null || roleName.trim().isEmpty()) {
-            throw new IllegalArgumentException("역할명은 필수입니다.");
+            throw RoleValidationException.nameRequired();
         }
     }
 }

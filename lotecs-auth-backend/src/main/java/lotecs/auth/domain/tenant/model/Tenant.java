@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lotecs.auth.exception.tenant.TenantStateException;
+import lotecs.auth.exception.tenant.TenantValidationException;
 
 @Getter
 @Setter
@@ -77,7 +79,7 @@ public class Tenant {
 
     public void publish(String updatedBy) {
         if (!status.canPublish()) {
-            throw new IllegalStateException("DRAFT 상태에서만 게시할 수 있습니다. 현재 상태: " + status);
+            throw TenantStateException.cannotPublish(status.name());
         }
         if (this.publishedAt == null) {
             this.publishedAt = LocalDateTime.now();
@@ -89,7 +91,7 @@ public class Tenant {
 
     public void unpublish(String updatedBy, String reason) {
         if (!status.canUnpublish()) {
-            throw new IllegalStateException("PUBLISHED 상태에서만 게시 중단할 수 있습니다. 현재 상태: " + status);
+            throw TenantStateException.cannotUnpublish(status.name());
         }
         this.unpublishedAt = LocalDateTime.now();
         this.status = SiteStatus.DRAFT;
@@ -99,7 +101,7 @@ public class Tenant {
 
     public void suspend(String updatedBy, String reason) {
         if (!status.canSuspend()) {
-            throw new IllegalStateException("PUBLISHED 상태에서만 일시중지할 수 있습니다. 현재 상태: " + status);
+            throw TenantStateException.cannotSuspend(status.name());
         }
         this.status = SiteStatus.SUSPENDED;
         this.updatedBy = updatedBy;
@@ -108,7 +110,7 @@ public class Tenant {
 
     public void resume(String updatedBy) {
         if (!status.canResume()) {
-            throw new IllegalStateException("SUSPENDED 상태에서만 재개할 수 있습니다. 현재 상태: " + status);
+            throw TenantStateException.cannotResume(status.name());
         }
         this.status = SiteStatus.PUBLISHED;
         this.updatedBy = updatedBy;
@@ -117,7 +119,7 @@ public class Tenant {
 
     public void archive(String updatedBy) {
         if (!status.canArchive()) {
-            throw new IllegalStateException("DRAFT 또는 SUSPENDED 상태에서만 보관할 수 있습니다. 현재 상태: " + status);
+            throw TenantStateException.cannotArchive(status.name());
         }
         this.status = SiteStatus.ARCHIVED;
         this.updatedBy = updatedBy;
@@ -126,7 +128,7 @@ public class Tenant {
 
     public void changePrimaryDomain(String newDomain, String updatedBy) {
         if (newDomain == null || newDomain.trim().isEmpty()) {
-            throw new IllegalArgumentException("주 도메인은 필수입니다.");
+            throw TenantValidationException.domainRequired();
         }
         this.primaryDomain = newDomain;
         this.updatedBy = updatedBy;
@@ -135,7 +137,7 @@ public class Tenant {
 
     public void changeTheme(String newTheme, String updatedBy) {
         if (newTheme == null || newTheme.trim().isEmpty()) {
-            throw new IllegalArgumentException("테마는 필수입니다.");
+            throw TenantValidationException.themeRequired();
         }
         this.themeName = newTheme;
         this.updatedBy = updatedBy;
@@ -155,7 +157,7 @@ public class Tenant {
 
     public void updatePlan(String planCode, LocalDateTime startDate, LocalDateTime endDate, String updatedBy) {
         if (planCode == null || planCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("플랜 코드는 필수입니다.");
+            throw TenantValidationException.planRequired();
         }
         this.subscriptionPlanCode = planCode;
         this.planStartDate = startDate;
@@ -178,16 +180,16 @@ public class Tenant {
 
     public void validate() {
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tenant ID는 필수입니다.");
+            throw TenantValidationException.idRequired();
         }
         if (siteName == null || siteName.trim().isEmpty()) {
-            throw new IllegalArgumentException("사이트 이름은 필수입니다.");
+            throw TenantValidationException.nameRequired();
         }
         if (siteCode == null || siteCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("사이트 코드는 필수입니다.");
+            throw TenantValidationException.codeRequired();
         }
         if (siteLevel != null && (siteLevel < 0 || siteLevel > 5)) {
-            throw new IllegalArgumentException("사이트 레벨은 0~5 범위여야 합니다.");
+            throw TenantValidationException.levelInvalid();
         }
     }
 }

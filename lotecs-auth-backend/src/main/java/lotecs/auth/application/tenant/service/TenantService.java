@@ -6,6 +6,8 @@ import lotecs.auth.application.tenant.dto.TenantDto;
 import lotecs.auth.application.tenant.mapper.TenantDtoMapper;
 import lotecs.auth.domain.tenant.model.Tenant;
 import lotecs.auth.domain.tenant.repository.TenantRepository;
+import lotecs.auth.exception.tenant.TenantAlreadyExistsException;
+import lotecs.auth.exception.tenant.TenantNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +30,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-002] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         return tenantDtoMapper.toDto(tenant);
@@ -41,7 +43,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findBySiteCode(siteCode)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-004] 테넌트를 찾을 수 없음: siteCode={}", siteCode);
-                    return new IllegalArgumentException("Tenant not found: " + siteCode);
+                    return TenantNotFoundException.bySiteCode(siteCode);
                 });
 
         return tenantDtoMapper.toDto(tenant);
@@ -68,7 +70,7 @@ public class TenantService {
         // 중복 검사
         if (tenantRepository.findBySiteCode(request.getSiteCode()).isPresent()) {
             log.warn("[TENANT-008] 이미 존재하는 사이트 코드: siteCode={}", request.getSiteCode());
-            throw new IllegalArgumentException("Site code already exists: " + request.getSiteCode());
+            throw TenantAlreadyExistsException.bySiteCode(request.getSiteCode());
         }
 
         Tenant tenant = Tenant.create(
@@ -154,7 +156,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-011] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         tenantDtoMapper.updateEntity(request, tenant);
@@ -173,7 +175,7 @@ public class TenantService {
 
         if (tenantRepository.findById(tenantId).isEmpty()) {
             log.warn("[TENANT-014] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-            throw new IllegalArgumentException("Tenant not found: " + tenantId);
+            throw TenantNotFoundException.byId(tenantId);
         }
 
         tenantRepository.delete(tenantId);
@@ -188,7 +190,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-017] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         tenant.publish(publishedBy);
@@ -205,7 +207,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-020] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         tenant.unpublish(unpublishedBy, reason);
@@ -222,7 +224,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-023] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         tenant.suspend(suspendedBy, reason);
@@ -239,7 +241,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-026] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         tenant.resume(resumedBy);
@@ -256,7 +258,7 @@ public class TenantService {
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> {
                     log.warn("[TENANT-029] 테넌트를 찾을 수 없음: tenantId={}", tenantId);
-                    return new IllegalArgumentException("Tenant not found: " + tenantId);
+                    return TenantNotFoundException.byId(tenantId);
                 });
 
         tenant.archive(archivedBy);

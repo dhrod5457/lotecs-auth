@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lotecs.auth.exception.user.UserValidationException;
 
 @Getter
 @Setter
@@ -106,16 +107,16 @@ public class User {
 
     public void validate() {
         if (username == null || username.trim().isEmpty()) {
-            throw new IllegalArgumentException("사용자명은 필수입니다.");
+            throw UserValidationException.usernameRequired();
         }
         if (password == null || password.trim().isEmpty()) {
-            throw new IllegalArgumentException("비밀번호는 필수입니다.");
+            throw UserValidationException.passwordRequired();
         }
         if (email == null || !email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            throw new IllegalArgumentException("유효한 이메일 주소를 입력해주세요.");
+            throw UserValidationException.emailInvalid();
         }
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("테넌트 ID는 필수입니다.");
+            throw UserValidationException.tenantRequired();
         }
     }
 

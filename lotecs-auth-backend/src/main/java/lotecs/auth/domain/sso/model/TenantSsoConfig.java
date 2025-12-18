@@ -81,11 +81,6 @@ public class TenantSsoConfig {
     // 추가 설정 (JSON)
     private String additionalConfig;
 
-    // Deprecated - RELAY용 (하위 호환성)
-    @Deprecated
-    private String relayEndpoint;
-    @Deprecated
-    private Integer relayTimeoutMs;
 
     // Fallback 설정
     @NotNull
@@ -169,8 +164,4 @@ public class TenantSsoConfig {
         return Collections.emptyMap();
     }
 
-    @Deprecated
-    public String getRelayEndpoint() {
-        return this.relayEndpoint;
-    }
 }

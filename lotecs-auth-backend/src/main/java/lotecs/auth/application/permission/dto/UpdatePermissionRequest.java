@@ -2,6 +2,7 @@ package lotecs.auth.application.permission.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import lotecs.auth.exception.permission.PermissionValidationException;
 
 @Getter
 @Builder
@@ -13,10 +14,10 @@ public class UpdatePermissionRequest {
 
     public void validate() {
         if (permissionId == null || permissionId.trim().isEmpty()) {
-            throw new IllegalArgumentException("권한 ID는 필수입니다.");
+            throw PermissionValidationException.idRequired();
         }
         if (tenantId == null || tenantId.trim().isEmpty()) {
-            throw new IllegalArgumentException("테넌트 ID는 필수입니다.");
+            throw PermissionValidationException.tenantRequired();
         }
     }
 }

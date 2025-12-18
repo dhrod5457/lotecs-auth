@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lotecs.auth.exception.role.RoleStatusValidationException;
 
 @Getter
 @Setter
@@ -31,16 +32,16 @@ public class RoleStatus {
 
     public void validate() {
         if (statusCode == null || statusCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("상태 코드는 필수입니다.");
+            throw RoleStatusValidationException.codeRequired();
         }
         if (statusName == null || statusName.trim().isEmpty()) {
-            throw new IllegalArgumentException("상태 이름은 필수입니다.");
+            throw RoleStatusValidationException.nameRequired();
         }
         if (roleCategory == null || roleCategory.trim().isEmpty()) {
-            throw new IllegalArgumentException("역할 카테고리는 필수입니다.");
+            throw RoleStatusValidationException.categoryRequired();
         }
         if (!isValidCategory(roleCategory)) {
-            throw new IllegalArgumentException("유효하지 않은 역할 카테고리입니다: " + roleCategory);
+            throw RoleStatusValidationException.categoryInvalid(roleCategory);
         }
     }
 

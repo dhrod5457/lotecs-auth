@@ -8,6 +8,8 @@ import lotecs.auth.application.role.dto.UpdateRoleRequest;
 import lotecs.auth.application.role.mapper.RoleDtoMapper;
 import lotecs.auth.domain.user.model.Role;
 import lotecs.auth.domain.user.repository.RoleRepository;
+import lotecs.auth.exception.role.RoleAlreadyExistsException;
+import lotecs.auth.exception.role.RoleNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +33,7 @@ public class RoleAppService {
         Role role = roleRepository.findByIdAndTenantId(roleId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[ROLE-002] 역할을 찾을 수 없음: roleId={}", roleId);
-                    return new IllegalArgumentException("Role not found: " + roleId);
+                    return RoleNotFoundException.byId(roleId);
                 });
 
         return roleDtoMapper.toDto(role);
@@ -44,7 +46,7 @@ public class RoleAppService {
         Role role = roleRepository.findByRoleNameAndTenantId(roleName, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[ROLE-004] 역할을 찾을 수 없음: roleName={}", roleName);
-                    return new IllegalArgumentException("Role not found: " + roleName);
+                    return RoleNotFoundException.byName(roleName);
                 });
 
         return roleDtoMapper.toDto(role);
@@ -67,7 +69,7 @@ public class RoleAppService {
         // 중복 확인
         if (roleRepository.findByRoleNameAndTenantId(request.getRoleName(), request.getTenantId()).isPresent()) {
             log.warn("[ROLE-007] 중복된 역할명: roleName={}", request.getRoleName());
-            throw new IllegalArgumentException("Role name already exists: " + request.getRoleName());
+            throw RoleAlreadyExistsException.byName(request.getRoleName());
         }
 
         Role role = Role.builder()
@@ -95,7 +97,7 @@ public class RoleAppService {
         Role role = roleRepository.findByIdAndTenantId(request.getRoleId(), request.getTenantId())
                 .orElseThrow(() -> {
                     log.warn("[ROLE-010] 역할을 찾을 수 없음: roleId={}", request.getRoleId());
-                    return new IllegalArgumentException("Role not found: " + request.getRoleId());
+                    return RoleNotFoundException.byId(request.getRoleId());
                 });
 
         if (request.getDisplayName() != null) {
@@ -123,7 +125,7 @@ public class RoleAppService {
         roleRepository.findByIdAndTenantId(roleId, tenantId)
                 .orElseThrow(() -> {
                     log.warn("[ROLE-013] 역할을 찾을 수 없음: roleId={}", roleId);
-                    return new IllegalArgumentException("Role not found: " + roleId);
+                    return RoleNotFoundException.byId(roleId);
                 });
 
         roleRepository.delete(roleId);
