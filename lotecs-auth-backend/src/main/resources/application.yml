@@ -302,6 +302,17 @@ lotecs:
   cache:
     enabled: false
 
+  # i18n 모듈 설정 (다국어 에러 메시지)
+  i18n:
+    enabled: true
+    default-locale: ko
+    supported-locales:
+      - ko
+      - en
+    encoding: UTF-8
+    use-code-as-default-message: true
+    locale-resolver-type: ACCEPT_HEADER
+
 # 인증 서비스 전용 설정
 auth:
   sso:

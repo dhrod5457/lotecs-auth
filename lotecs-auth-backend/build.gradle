@@ -39,6 +39,7 @@ dependencies {
     implementation 'lotecs.framework:lotecs-tenant-spring-boot-starter'
     implementation 'lotecs.framework:lotecs-mybatis-spring-boot-starter'
     implementation 'lotecs.framework:lotecs-exception-spring-boot-starter'
+    implementation 'lotecs.framework:lotecs-i18n-spring-boot-starter:1.0.0-SNAPSHOT'
     implementation 'lotecs.framework:lotecs-web-spring-boot-starter'
     implementation 'lotecs.framework:lotecs-ratelimit-spring-boot-starter'
 
