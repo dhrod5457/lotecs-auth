@@ -32,7 +32,10 @@ lotecs-auth/
 ### SSO 연동
 - Keycloak 연동
 - LDAP 연동
-- Relay 서비스 연동
+- JWT SSO 연동
+- CAS 연동
+- REST Token 연동
+- HTTP Form 연동
 
 ### 사용자 관리
 - 사용자 CRUD
@@ -53,7 +56,7 @@ lotecs-auth/
 ### 조직 관리
 - 조직 계층 구조
 - 사용자-조직 매핑
-- Relay 서비스와 조직 동기화
+- gRPC를 통한 외부 시스템과 조직 동기화
 
 ## API
 

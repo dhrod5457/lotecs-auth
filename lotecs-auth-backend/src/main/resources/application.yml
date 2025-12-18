@@ -313,11 +313,6 @@ lotecs:
 # 인증 서비스 전용 설정
 auth:
   sso:
-    relay:
-      enabled: true
-      default-timeout-ms: 5000
-      keepalive-time-seconds: 30
-      keepalive-timeout-seconds: 10
     keycloak:
       enabled: true
     ldap:

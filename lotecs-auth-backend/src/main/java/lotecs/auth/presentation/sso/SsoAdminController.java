@@ -12,7 +12,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/admin/sso")
+@RequestMapping("/sso")
 @RequiredArgsConstructor
 public class SsoAdminController {
 

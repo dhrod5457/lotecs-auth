@@ -8,6 +8,7 @@ import lotecs.auth.domain.sso.SsoProvider;
 import lotecs.auth.domain.sso.SsoType;
 import lotecs.auth.domain.sso.model.TenantSsoConfig;
 import lotecs.auth.domain.sso.repository.TenantSsoConfigRepository;
+import lotecs.auth.exception.sso.SsoServerException;
 import org.springframework.stereotype.Component;
 
 import lotecs.auth.domain.sso.exception.SsoConnectionException;

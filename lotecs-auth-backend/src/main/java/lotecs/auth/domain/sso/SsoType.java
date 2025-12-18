@@ -7,9 +7,5 @@ public enum SsoType {
     JWT_SSO,
     CAS,
     REST_TOKEN,
-    HTTP_FORM,
-    @Deprecated
-    RELAY,
-    @Deprecated
-    EXTERNAL
+    HTTP_FORM
 }

@@ -286,8 +286,6 @@ Authorization: Bearer {admin_token}
         "tenantId": "TENANT_001",
         "ssoType": "KEYCLOAK",
         "ssoEnabled": true,
-        "relayEndpoint": "https://relay.example.com",
-        "relayTimeoutMs": 5000,
         "ssoServerUrl": "https://keycloak.example.com",
         "ssoRealm": "my-realm",
         "ssoClientId": "my-client",
@@ -335,47 +333,11 @@ Authorization: Bearer {admin_token}
 
 ---
 
-## Relay 서버 연동
+## 조직 동기화 (gRPC)
 
-LOTECS Auth는 Relay 서버와 연동하여 조직 정보와 사용자-조직 매핑을 동기화할 수 있다.
+외부 시스템에서 조직 정보와 사용자-조직 매핑을 동기화할 수 있다.
 
-### Relay 서버 역할
-
-```
-┌─────────────┐     gRPC      ┌─────────────┐     동기화     ┌─────────────┐
-│   Relay     │──────────────>│ LOTECS Auth │<──────────────>│   Client    │
-│   Server    │               │   Service   │                │   Service   │
-└─────────────┘               └─────────────┘                └─────────────┘
-      │                              │
-      │ - 사용자 인증 (SSO)          │ - 조직 정보 저장
-      │ - 조직 정보 제공             │ - 사용자-조직 매핑
-      │ - 사용자 정보 제공           │ - JWT 토큰 발급
-      │                              │
-```
-
-### Relay 설정
-
-```yaml
-# application.yml
-auth:
-  sso:
-    relay:
-      enabled: true
-      default-timeout-ms: 5000
-      keepalive-time-seconds: 30
-      keepalive-timeout-seconds: 10
-```
-
-| 설정 | 설명 | 기본값 |
-|------|------|--------|
-| enabled | Relay SSO 활성화 | true |
-| default-timeout-ms | 기본 타임아웃 (ms) | 5000 |
-| keepalive-time-seconds | Keep-alive 시간 (초) | 30 |
-| keepalive-timeout-seconds | Keep-alive 타임아웃 (초) | 10 |
-
-### 조직 동기화 API (gRPC)
-
-Relay 서버에서 조직 정보를 동기화할 때 사용하는 gRPC API:
+### gRPC 조직 동기화 API
 
 **OrganizationService**
 
@@ -398,17 +360,17 @@ Relay 서버에서 조직 정보를 동기화할 때 사용하는 gRPC API:
 ### 조직 동기화 흐름
 
 ```
-1. Relay -> Auth: SyncOrganization(조직 정보)
+1. External -> Auth: SyncOrganization(조직 정보)
 2. Auth: 조직 존재 여부 확인
    - 없으면 신규 생성
    - 있으면 정보 업데이트
-3. Auth -> Relay: 동기화 결과 반환
+3. Auth -> External: 동기화 결과 반환
 
-4. Relay -> Auth: SyncUserOrganization(사용자-조직 매핑)
+4. External -> Auth: SyncUserOrganization(사용자-조직 매핑)
 5. Auth: 매핑 존재 여부 확인
    - 없으면 신규 생성
    - 있으면 정보 업데이트
-6. Auth -> Relay: 동기화 결과 반환
+6. Auth -> External: 동기화 결과 반환
 ```
 
 ### 조직 데이터 구조

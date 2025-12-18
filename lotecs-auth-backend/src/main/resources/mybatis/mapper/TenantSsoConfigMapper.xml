@@ -30,8 +30,6 @@
         <result property="userSyncEnabled" column="USER_SYNC_ENABLED"/>
         <result property="roleMappingEnabled" column="ROLE_MAPPING_ENABLED"/>
         <result property="additionalConfig" column="ADDITIONAL_CONFIG"/>
-        <result property="relayEndpoint" column="RELAY_ENDPOINT"/>
-        <result property="relayTimeoutMs" column="RELAY_TIMEOUT_MS"/>
         <result property="fallbackEnabled" column="FALLBACK_ENABLED"/>
         <result property="fallbackPasswordRequired" column="FALLBACK_PASSWORD_REQUIRED"/>
         <result property="createdAt" column="CREATED_AT"/>
@@ -66,8 +64,6 @@
         USER_SYNC_ENABLED,
         ROLE_MAPPING_ENABLED,
         ADDITIONAL_CONFIG,
-        RELAY_ENDPOINT,
-        RELAY_TIMEOUT_MS,
         FALLBACK_ENABLED,
         FALLBACK_PASSWORD_REQUIRED,
         CREATED_AT,
@@ -111,8 +107,6 @@
             USER_SYNC_ENABLED,
             ROLE_MAPPING_ENABLED,
             ADDITIONAL_CONFIG,
-            RELAY_ENDPOINT,
-            RELAY_TIMEOUT_MS,
             FALLBACK_ENABLED,
             FALLBACK_PASSWORD_REQUIRED,
             CREATED_AT,
@@ -144,8 +138,6 @@
             #{userSyncEnabled},
             #{roleMappingEnabled},
             #{additionalConfig},
-            #{relayEndpoint},
-            #{relayTimeoutMs},
             #{fallbackEnabled},
             #{fallbackPasswordRequired},
             #{createdAt},
@@ -182,8 +174,6 @@
             USER_SYNC_ENABLED = #{userSyncEnabled},
             ROLE_MAPPING_ENABLED = #{roleMappingEnabled},
             ADDITIONAL_CONFIG = #{additionalConfig},
-            RELAY_ENDPOINT = #{relayEndpoint},
-            RELAY_TIMEOUT_MS = #{relayTimeoutMs},
             FALLBACK_ENABLED = #{fallbackEnabled},
             FALLBACK_PASSWORD_REQUIRED = #{fallbackPasswordRequired},
             UPDATED_AT = #{updatedAt}
