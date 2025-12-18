@@ -7,6 +7,7 @@ import lotecs.auth.application.auth.dto.LoginRequest;
 import lotecs.auth.application.auth.dto.LoginResponse;
 import lotecs.auth.application.auth.dto.ValidateTokenResponse;
 import lotecs.auth.application.user.mapper.UserDtoMapper;
+import lotecs.auth.application.user.service.UserProfileService;
 import lotecs.auth.application.user.service.UserSyncService;
 import lotecs.auth.domain.sso.SsoAuthRequest;
 import lotecs.auth.domain.sso.SsoAuthResult;
@@ -44,6 +45,7 @@ public class AuthService {
     private final TenantSsoConfigRepository ssoConfigRepository;
     private final SsoProviderFactory ssoProviderFactory;
     private final UserSyncService userSyncService;
+    private final UserProfileService userProfileService;
     private final JwtAuthenticationService jwtAuthenticationService;
     private final JwtRefreshService jwtRefreshService;
     private final UserRepository userRepository;
@@ -192,18 +194,18 @@ public class AuthService {
     }
 
     /**
-     * 외부 SSO 인증: RELAY/KEYCLOAK/LDAP/EXTERNAL
+     * 외부 SSO 인증 (Fallback 지원)
      *
      * @param request 로그인 요청
      * @param ssoConfig SSO 설정
      * @return 인증 결과 (User + additionalData)
      */
     private AuthResult authenticateExternal(LoginRequest request, TenantSsoConfig ssoConfig) {
-        log.debug("[AUTH] 외부 SSO 인증 시작: ssoType={}, tenant={}",
-                ssoConfig.getSsoType(), request.getTenantId());
+        log.debug("[AUTH] 외부 SSO 인증 시작: ssoType={}, tenant={}, fallbackEnabled={}",
+                ssoConfig.getSsoType(), request.getTenantId(), ssoConfig.isFallbackEnabled());
 
-        // SsoProvider 가져오기
-        SsoProvider ssoProvider = ssoProviderFactory.getProvider(ssoConfig.getSsoType());
+        // SsoProvider 가져오기 (Fallback 기능 포함)
+        SsoProvider ssoProvider = ssoProviderFactory.getProviderWithFallback(ssoConfig);
 
         // SSO 인증 요청
         SsoAuthRequest ssoRequest = new SsoAuthRequest();
@@ -221,17 +223,43 @@ public class AuthService {
             throw new IllegalArgumentException("SSO authentication failed: " + ssoResult.getErrorMessage());
         }
 
-        log.info("[AUTH] 외부 SSO 인증 성공: ssoType={}, externalUserId={}, username={}",
-                ssoConfig.getSsoType(), ssoResult.getExternalUserId(), ssoResult.getUsername());
+        // Fallback 여부 확인
+        boolean isFallback = ssoResult.getAdditionalData() != null
+                && Boolean.TRUE.equals(ssoResult.getAdditionalData().get("_fallback"));
 
-        // 사용자 동기화 (UserSyncService)
-        User user = userSyncService.syncUserFromExternal(ssoResult, ssoConfig);
+        if (isFallback) {
+            log.info("[AUTH] Fallback 인증 성공: ssoType={}, username={}, reason={}",
+                    ssoConfig.getSsoType(), ssoResult.getUsername(),
+                    ssoResult.getAdditionalData().get("_fallbackReason"));
+        } else {
+            log.info("[AUTH] 외부 SSO 인증 성공: ssoType={}, externalUserId={}, username={}",
+                    ssoConfig.getSsoType(), ssoResult.getExternalUserId(), ssoResult.getUsername());
+        }
+
+        User user;
+        if (isFallback) {
+            // Fallback의 경우 이미 DB에 있는 사용자
+            user = userRepository
+                    .findByUsernameAndTenantId(ssoResult.getUsername(), request.getTenantId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        } else {
+            // 정상 SSO 인증의 경우 사용자 동기화
+            user = userSyncService.syncUserFromExternal(ssoResult, ssoConfig);
+
+            // 프로필 데이터 저장 (SSO에서 받은 추가 데이터)
+            userProfileService.saveProfileFromSso(
+                    user.getUserId(),
+                    user.getTenantId(),
+                    ssoResult,
+                    ssoConfig.getSsoType()
+            );
+        }
 
         // 계정 상태 확인
         validateUserStatus(user);
 
-        log.info("[AUTH] 외부 SSO 인증 및 동기화 완료: userId={}, externalUserId={}",
-                user.getUserId(), ssoResult.getExternalUserId());
+        log.info("[AUTH] 외부 SSO 인증 완료: userId={}, externalUserId={}, fallback={}",
+                user.getUserId(), ssoResult.getExternalUserId(), isFallback);
 
         return AuthResult.of(user, ssoResult.getAdditionalData());
     }

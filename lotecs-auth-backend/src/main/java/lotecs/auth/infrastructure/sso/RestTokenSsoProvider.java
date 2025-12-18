@@ -14,11 +14,9 @@ import lotecs.auth.domain.sso.exception.SsoConnectionException;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
@@ -83,7 +81,7 @@ public class RestTokenSsoProvider implements SsoProvider {
         } catch (SsoConnectionException e) {
             // 연결 오류는 그대로 전파 (Fallback 처리용)
             throw e;
-        } catch (HttpTimeoutException | HttpConnectTimeoutException e) {
+        } catch (HttpTimeoutException e) {
             log.error("REST_TOKEN SSO timeout for user {} in tenant {}: {}",
                     request.getUsername(), request.getTenantId(), e.getMessage());
             throw SsoConnectionException.timeout("SSO 서버 연결 타임아웃: " + e.getMessage(), e);

@@ -102,7 +102,7 @@
 
     <insert id="insert" parameterType="lotecs.auth.domain.tenant.model.Tenant">
         INSERT INTO ATH_TENANT (
-            TENANT_ID, SITE_NAME, SITE_CODE, PRIMARY_DOMAIN, ADDITIONAL_DOMAINS,
+            ID, TENANT_ID, SITE_NAME, SITE_CODE, PRIMARY_DOMAIN, ADDITIONAL_DOMAINS,
             DESCRIPTION, SITE_TITLE, SITE_DESCRIPTION, THEME_NAME,
             DEFAULT_LANGUAGE, TIMEZONE, OWNER_EMAIL, ADMIN_EMAIL, CONTACT_PHONE,
             PARENT_TENANT_ID, SITE_LEVEL, MAX_CONTENT_ITEMS, MAX_STORAGE_MB, MAX_USERS,
@@ -110,6 +110,7 @@
             SUBSCRIPTION_PLAN_CODE, PLAN_START_DATE, PLAN_END_DATE,
             VERSION, CREATED_BY, CREATED_AT
         ) VALUES (
+            SEQ_ATH_TENANT.NEXTVAL,
             #{tenantId}, #{siteName}, #{siteCode}, #{primaryDomain}, #{additionalDomains},
             #{description}, #{siteTitle}, #{siteDescription}, #{themeName},
             #{defaultLanguage}, #{timezone}, #{ownerEmail}, #{adminEmail}, #{contactPhone},

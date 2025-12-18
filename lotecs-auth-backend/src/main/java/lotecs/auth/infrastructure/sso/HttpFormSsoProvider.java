@@ -10,11 +10,16 @@ import lotecs.auth.domain.sso.model.TenantSsoConfig;
 import lotecs.auth.domain.sso.repository.TenantSsoConfigRepository;
 import org.springframework.stereotype.Component;
 
+import lotecs.auth.domain.sso.exception.SsoConnectionException;
+
+import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
@@ -59,6 +64,23 @@ public class HttpFormSsoProvider implements SsoProvider {
         } catch (IllegalStateException e) {
             log.error("Configuration error: {}", e.getMessage());
             return SsoAuthResult.failure("CONFIG_ERROR", e.getMessage());
+        } catch (SsoConnectionException e) {
+            throw e;
+        } catch (HttpTimeoutException e) {
+            log.error("HTTP_FORM SSO timeout for user {} in tenant {}: {}",
+                    request.getUsername(), request.getTenantId(), e.getMessage());
+            throw SsoConnectionException.timeout("SSO 서버 연결 타임아웃: " + e.getMessage(), e);
+        } catch (ConnectException e) {
+            log.error("HTTP_FORM SSO connection refused for user {} in tenant {}: {}",
+                    request.getUsername(), request.getTenantId(), e.getMessage());
+            throw SsoConnectionException.networkError("SSO 서버 연결 실패: " + e.getMessage(), e);
+        } catch (IOException e) {
+            log.error("HTTP_FORM SSO IO error for user {} in tenant {}: {}",
+                    request.getUsername(), request.getTenantId(), e.getMessage(), e);
+            throw SsoConnectionException.networkError("SSO 서버 통신 오류: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw SsoConnectionException.networkError("SSO 인증 중단됨", e);
         } catch (Exception e) {
             log.error("HTTP_FORM SSO authentication failed for user {} in tenant {}: {}",
                     request.getUsername(), request.getTenantId(), e.getMessage(), e);
@@ -79,6 +101,13 @@ public class HttpFormSsoProvider implements SsoProvider {
                 .build();
 
         HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() >= 500) {
+            throw SsoConnectionException.serverError(
+                    "SSO 서버 오류: HTTP " + response.statusCode(),
+                    response.statusCode()
+            );
+        }
 
         if (response.statusCode() != 200) {
             log.warn("SSO server returned status: {}", response.statusCode());

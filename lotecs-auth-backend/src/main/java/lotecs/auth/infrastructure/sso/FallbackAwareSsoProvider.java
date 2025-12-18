@@ -105,7 +105,14 @@ public class FallbackAwareSsoProvider implements SsoProvider {
                 );
             }
 
-            // 2. 비밀번호 검증 (설정에 따라)
+            // 2. 계정 상태 확인
+            if (!user.isEnabled() || !user.isAccountNonLocked()) {
+                log.warn("[FALLBACK] 계정 비활성화 또는 잠김: tenant={}, username={}, enabled={}, locked={}",
+                        request.getTenantId(), request.getUsername(), user.isEnabled(), !user.isAccountNonLocked());
+                return SsoAuthResult.failure("FALLBACK_ACCOUNT_DISABLED", "계정이 비활성화되었거나 잠겨있습니다.");
+            }
+
+            // 3. 비밀번호 검증 (설정에 따라)
             if (ssoConfig.isFallbackPasswordRequired()) {
                 if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                     log.warn("[FALLBACK] 비밀번호 불일치: tenant={}, username={}",
@@ -114,10 +121,10 @@ public class FallbackAwareSsoProvider implements SsoProvider {
                 }
             }
 
-            // 3. 저장된 프로필 데이터 조회
+            // 4. 저장된 프로필 데이터 조회
             Map<String, Object> additionalData = loadStoredProfileData(user.getUserId(), request.getTenantId());
 
-            // 4. 폴백 정보를 additionalData에 추가
+            // 5. 폴백 정보를 additionalData에 추가
             additionalData.put("_fallback", true);
             additionalData.put("_fallbackReason", originalException.getErrorType().name());
             if (originalException.getHttpStatusCode() != null) {

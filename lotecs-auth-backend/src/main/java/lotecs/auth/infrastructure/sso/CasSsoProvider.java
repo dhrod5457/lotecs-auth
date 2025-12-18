@@ -22,7 +22,6 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
@@ -74,22 +73,8 @@ public class CasSsoProvider implements SsoProvider {
             log.error("Configuration error: {}", e.getMessage());
             return SsoAuthResult.failure("CONFIG_ERROR", e.getMessage());
         } catch (SsoConnectionException e) {
+            // validateCasTicket에서 변환된 연결 오류 - 상위로 전파하여 Fallback 처리
             throw e;
-        } catch (HttpTimeoutException | HttpConnectTimeoutException e) {
-            log.error("CAS SSO timeout for user {} in tenant {}: {}",
-                    request.getUsername(), request.getTenantId(), e.getMessage());
-            throw SsoConnectionException.timeout("CAS 서버 연결 타임아웃: " + e.getMessage(), e);
-        } catch (ConnectException e) {
-            log.error("CAS SSO connection refused for user {} in tenant {}: {}",
-                    request.getUsername(), request.getTenantId(), e.getMessage());
-            throw SsoConnectionException.networkError("CAS 서버 연결 실패: " + e.getMessage(), e);
-        } catch (IOException e) {
-            log.error("CAS SSO IO error for user {} in tenant {}: {}",
-                    request.getUsername(), request.getTenantId(), e.getMessage(), e);
-            throw SsoConnectionException.networkError("CAS 서버 통신 오류: " + e.getMessage(), e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw SsoConnectionException.networkError("CAS 인증 중단됨", e);
         } catch (Exception e) {
             log.error("CAS SSO authentication failed for user {} in tenant {}: {}",
                     request.getUsername(), request.getTenantId(), e.getMessage(), e);
@@ -126,7 +111,7 @@ public class CasSsoProvider implements SsoProvider {
 
             return parseValidationResponse(response.body());
 
-        } catch (HttpTimeoutException | HttpConnectTimeoutException e) {
+        } catch (HttpTimeoutException e) {
             throw SsoConnectionException.timeout("CAS 서버 연결 타임아웃: " + e.getMessage(), e);
         } catch (ConnectException e) {
             throw SsoConnectionException.networkError("CAS 서버 연결 실패: " + e.getMessage(), e);

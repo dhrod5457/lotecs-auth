@@ -61,9 +61,10 @@
 
     <insert id="insert" parameterType="lotecs.auth.domain.user.model.RoleStatus">
         INSERT INTO ATH_ROLE_STATUS (
-            STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION,
+            ID, STATUS_CODE, STATUS_NAME, ROLE_CATEGORY, IS_ACTIVE, DESCRIPTION,
             SORT_ORDER, IS_DEFAULT, CREATED_BY, CREATED_AT
         ) VALUES (
+            SEQ_ATH_ROLE_STATUS.NEXTVAL,
             #{statusCode}, #{statusName}, #{roleCategory},
             #{isActive, jdbcType=NUMERIC, typeHandler=org.apache.ibatis.type.BooleanTypeHandler},
             #{description}, #{sortOrder},

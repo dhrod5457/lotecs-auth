@@ -4,6 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lotecs.auth.domain.sso.SsoProvider;
 import lotecs.auth.domain.sso.SsoType;
+import lotecs.auth.domain.sso.model.TenantSsoConfig;
+import lotecs.auth.domain.user.repository.UserProfileRepository;
+import lotecs.auth.domain.user.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -14,7 +18,14 @@ import java.util.Map;
 public class SsoProviderFactory {
 
     private final Map<String, SsoProvider> providers;
+    private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final PasswordEncoder passwordEncoder;
 
+    /**
+     * SSO 타입에 해당하는 Provider를 반환한다.
+     * Fallback 기능이 필요한 경우 getProviderWithFallback을 사용한다.
+     */
     public SsoProvider getProvider(SsoType ssoType) {
         log.debug("Retrieving SSO provider for type: {}", ssoType);
 
@@ -43,5 +54,32 @@ public class SsoProviderFactory {
 
         log.debug("Successfully retrieved provider: {} for SSO type: {}", provider.getClass().getSimpleName(), ssoType);
         return provider;
+    }
+
+    /**
+     * Fallback 기능이 적용된 SSO Provider를 반환한다.
+     * SSO 서버 연결 실패 시 Internal DB로 폴백하여 인증을 시도한다.
+     *
+     * @param ssoConfig 테넌트 SSO 설정 (fallbackEnabled 여부 포함)
+     * @return Fallback이 적용된 SsoProvider
+     */
+    public SsoProvider getProviderWithFallback(TenantSsoConfig ssoConfig) {
+        SsoProvider baseProvider = getProvider(ssoConfig.getSsoType());
+
+        // Fallback이 비활성화되어 있으면 기본 Provider 반환
+        if (!ssoConfig.isFallbackEnabled()) {
+            log.debug("Fallback disabled for tenant: {}, returning base provider", ssoConfig.getTenantId());
+            return baseProvider;
+        }
+
+        // Fallback이 활성화되어 있으면 FallbackAwareSsoProvider로 래핑
+        log.debug("Fallback enabled for tenant: {}, wrapping with FallbackAwareSsoProvider", ssoConfig.getTenantId());
+        return new FallbackAwareSsoProvider(
+                baseProvider,
+                ssoConfig,
+                userRepository,
+                userProfileRepository,
+                passwordEncoder
+        );
     }
 }
